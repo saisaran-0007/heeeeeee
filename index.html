@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI — Agentic Skill Assessment & Career Intelligence Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* High-Contrast Dark Theme — Strictly NO Yellow/Amber anywhere */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #060913;
+            color: #f1f5f9;
+        }
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #060913;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.14);
+        }
+        .glass-card-violet {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(168, 85, 247, 0.22);
+        }
+        .fade-in {
+            animation: fadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .radar-polygon {
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        /* Anti-select styling for proctored coding statements */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-full overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- ===================================================================== -->
+    <!-- GLOBAL PROCTOR / NOTIFICATION TOAST (High-Contrast Cyan/Rose/Emerald) -->
+    <!-- ===================================================================== -->
+    <div id="global-toast" class="fixed top-5 right-5 z-[100] hidden max-w-md rounded-2xl border border-rose-500/60 bg-slate-950/95 px-5 py-4 shadow-2xl shadow-rose-500/20 backdrop-blur-xl transition-all">
+        <div class="flex items-start gap-3.5">
+            <div id="toast-icon" class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold">
+                🛡️
+            </div>
+            <div class="flex-1">
+                <p id="toast-title" class="text-xs font-bold uppercase tracking-wider text-rose-400">Anti-Cheat Proctor Alert</p>
+                <p id="toast-message" class="mt-1 text-sm text-slate-200 leading-relaxed">Copy-Paste is strictly disabled in the Coding Assessment Arena.</p>
+            </div>
+            <button onclick="hideToast()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- TOP-LEFT USER PROFILE DRAWER / MODAL (Accessible from Page 2 & Page 3)-->
+    <!-- ===================================================================== -->
+    <div id="profile-drawer-backdrop" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-start justify-start p-4 sm:p-6">
+        <div class="w-full max-w-md rounded-2xl border border-cyan-500/30 bg-slate-900 p-6 shadow-2xl shadow-cyan-500/10 fade-in mt-12 ml-2">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-3.5">
+                    <div id="drawer-avatar" class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 text-base font-extrabold text-white shadow-lg shadow-cyan-500/20">
+                        SS
+                    </div>
+                    <div>
+                        <h3 id="drawer-name" class="text-lg font-bold text-white">Sai Saran</h3>
+                        <p id="drawer-meta" class="text-xs font-medium text-cyan-400">Age: 19 • Target: Full Stack Developer</p>
+                    </div>
+                </div>
+                <button onclick="toggleProfileDrawer(false)" class="rounded-lg border border-slate-700 bg-slate-800/80 p-2 text-slate-300 hover:border-cyan-400 hover:text-white">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Selected Skills & Assessment Scores inside Drawer -->
+            <div class="mt-5 space-y-4">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Verified Skill Assessment Ledger</p>
+                    <div id="drawer-skills-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="rounded-xl border border-purple-500/30 bg-purple-950/20 p-3.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-purple-300">Target Role Benchmark</span>
+                        <span id="drawer-career-badge" class="rounded-full bg-purple-500/20 px-2.5 py-0.5 font-bold text-purple-200 border border-purple-500/40">Full Stack Developer</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button onclick="toggleProfileDrawer(false); navigateToPage(1);" class="flex-1 rounded-xl border border-cyan-500/40 bg-cyan-500/10 py-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-500/20 transition-all">
+                        ✎ Edit Profile (Page 1)
+                    </button>
+                    <button onclick="toggleProfileDrawer(false)" class="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SEARCHABLE 85+ SKILLS MODAL (Used on Page 1)                          -->
+    <!-- ===================================================================== -->
+    <div id="skills-modal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl rounded-2xl border border-cyan-500/30 bg-slate-900 shadow-2xl overflow-hidden flex flex-col max-h-[86vh] fade-in">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                <div>
+                    <h3 class="text-base font-bold text-white">Explore & Select Technical Skills (85+ Catalog)</h3>
+                    <p class="text-xs text-slate-400">Click any skill pill to toggle it in your profile. Every selected skill generates a dedicated 100-mark exam.</p>
+                </div>
+                <button onclick="closeSkillsModal()" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-300 hover:text-white">✕ ESC</button>
+            </div>
+
+            <div class="p-4 border-b border-slate-800 bg-slate-900/90 space-y-3">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="modal-skill-search" type="text" oninput="renderModalSkills()" placeholder="Search skills (e.g., Kubernetes, FastAPI, TensorFlow, Rust, GraphQL, Linux)..." class="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-cyan-400 focus:outline-none">
+                    <button onclick="addCustomSkillFromModal()" class="rounded-xl bg-purple-600 hover:bg-purple-500 px-4 py-2.5 text-xs font-bold text-white shrink-0 transition-colors">
+                        + Add Custom Skill
+                    </button>
+                </div>
+                <div id="modal-category-tabs" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <div id="modal-skills-grid" class="p-5 overflow-y-auto flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+
+            <div class="px-6 py-3.5 border-t border-slate-800 bg-slate-950 flex items-center justify-between">
+                <span id="modal-selected-count" class="text-xs font-semibold text-cyan-400">3 skills selected</span>
+                <button onclick="closeSkillsModal()" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 px-6 py-2 text-xs font-extrabold text-slate-950 transition-colors">
+                    Done & Save Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- PERSISTENT TOP BAR FOR PAGE 2 & PAGE 3 (Contains Round Profile Icon)  -->
+    <!-- ===================================================================== -->
+    <header id="app-topbar" class="hidden sticky top-0 z-40 border-b border-slate-800/90 bg-slate-950/90 backdrop-blur-xl px-4 sm:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <!-- Left: Clickable Round Profile Icon + Active Learner Info -->
+            <div class="flex items-center gap-4">
+                <button onclick="toggleProfileDrawer(true)" title="Click to view User Profile" class="group relative flex items-center gap-3 rounded-full border border-cyan-500/40 bg-slate-900/90 pr-4 pl-1.5 py-1 hover:border-cyan-400 hover:bg-slate-800/80 transition-all shadow-lg shadow-cyan-500/10">
+                    <div id="topbar-avatar" class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500 via-blue-500 to-purple-600 text-xs font-extrabold text-white">
+                        SS
+                    </div>
+                    <div class="text-left">
+                        <div class="flex items-center gap-1.5">
+                            <span id="topbar-name" class="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">Sai Saran</span>
+                            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                        </div>
+                        <p id="topbar-career" class="text-[11px] font-medium text-cyan-400">Full Stack Developer</p>
+                    </div>
+                </button>
+
+                <!-- Step Breadcrumb Indicator -->
+                <div class="hidden md:flex items-center gap-2 text-xs font-semibold">
+                    <button onclick="navigateToPage(1)" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-colors">
+                        1. Profile Setup
+                    </button>
+                    <span class="text-slate-600">→</span>
+                    <button id="breadcrumb-p2" onclick="navigateToPage(2)" class="px-3 py-1.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                        2. Skill Assessments (100M)
+                    </button>
+                    <span class="text-slate-600">→</span>
+                    <button id="breadcrumb-p3" onclick="tryNavigateToPage3()" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white border border-transparent">
+                        3. Spider Charts & Agent Roadmap
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Overall Assessment Progress + Quick Demo Controls -->
+            <div class="flex items-center gap-3">
+                <div id="topbar-progress-pill" class="rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-300">
+                    Skills Assessed: <span id="topbar-assessed-count" class="font-bold text-cyan-400">0/3</span>
+                </div>
+                <button id="btn-demo-finish-all" onclick="demoAutoCompleteAllAssessments()" class="rounded-xl border border-purple-500/40 bg-purple-500/15 hover:bg-purple-500/25 px-3.5 py-1.5 text-xs font-bold text-purple-300 transition-colors" title="Hackathon Judge Shortcut: Completes all remaining skill exams with realistic scores and opens Page 3 Spider Charts">
+                    ⚡ Demo: Complete All Skills → Page 3
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- PAGE 1: STANDALONE USER PROFILE ONBOARDING (Exclusively on Launch)    -->
+    <!-- ===================================================================== -->
+    <section id="page-1" class="min-h-screen w-full py-10 px-4 sm:px-8 flex flex-col items-center justify-center fade-in">
+        <div class="w-full max-w-5xl space-y-6">
+            
+            <!-- Top Brand Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+                <div class="flex items-center gap-3.5">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-600 to-purple-600 shadow-lg shadow-cyan-500/25">
+                        <span class="text-xl font-black text-white">◆</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-cyan-300">Step 1 of 3 • Learner Onboarding</span>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-0.5">Agentic AI Skill & Career Profiling</h1>
+                    </div>
+                </div>
+                <div class="text-left sm:text-right">
+                    <p class="text-xs font-medium text-slate-400">Multi-Agent Architecture</p>
+                    <p class="text-xs font-bold text-cyan-400">Analyzer • Proctored Examiner • Career Matcher</p>
+                </div>
+            </div>
+
+            <!-- Main Profile Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left Column: Identity Card + Target Career Selector (5 cols) -->
+                <div class="lg:col-span-5 space-y-6">
+                    
+                    <!-- Card 1: Learner Identity -->
+                    <div class="glass-card rounded-2xl p-6 space-y-5">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-cyan-400">1. Learner Identity</h2>
+                            <span class="text-[11px] font-medium text-emerald-400">● Profile Active</span>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-3.5 rounded-xl bg-slate-950/90 border border-slate-800">
+                            <div id="p1-avatar-preview" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500 to-purple-600 text-lg font-extrabold text-white shadow-lg shadow-cyan-500/20">
+                                SS
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p id="p1-name-preview" class="text-base font-bold text-white truncate">Sai Saran</p>
+                                <p id="p1-meta-preview" class="text-xs text-slate-400">Age: <span class="text-cyan-300 font-semibold">19</span> • <span id="p1-skill-count-preview" class="text-purple-300 font-semibold">3 Skills Selected</span></p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Full Name</label>
+                                <input id="input-user-name" type="text" value="Sai Saran" oninput="syncProfileIdentityUI()" placeholder="Enter your full name" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-cyan-400 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Age</label>
+                                <div class="flex items-center rounded-xl border border-slate-700 bg-slate-950 overflow-hidden">
+                                    <button type="button" onclick="adjustAge(-1)" class="px-3 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-cyan-400 font-bold transition-colors">−</button>
+                                    <input id="input-user-age" type="number" min="12" max="80" value="19" oninput="syncProfileIdentityUI()" class="w-full bg-transparent text-center text-sm font-bold text-white focus:outline-none">
+                                    <button type="button" onclick="adjustAge(1)" class="px-3 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-cyan-400 font-bold transition-colors">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Target Career (10 Round Oval Pills + Web Lookup) -->
+                    <div class="glass-card-violet rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider text-purple-300">3. Target Career Goal</h2>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Select from top 10 roles or search any career via web</p>
+                            </div>
+                            <span id="active-career-pill-header" class="rounded-full bg-purple-500/20 border border-purple-500/40 px-3 py-1 text-xs font-bold text-purple-200">
+                                Full Stack Developer
+                            </span>
+                        </div>
+
+                        <!-- 10 Round Oval Career Pills -->
+                        <div id="p1-career-ovals" class="flex flex-wrap gap-2 pt-1"></div>
+
+                        <!-- Custom Career Web Lookup Box -->
+                        <div id="custom-career-panel" class="hidden rounded-xl border border-cyan-500/40 bg-slate-950/95 p-4 space-y-3 fade-in">
+                            <label class="block text-xs font-bold text-cyan-300">🌐 Live Internet Career Intelligence Lookup</label>
+                            <div class="flex gap-2">
+                                <input id="custom-career-input" type="text" placeholder="e.g., Quantitative Analyst, Robotics Engineer, Blockchain Architect..." class="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none">
+                                <button type="button" onclick="lookupCustomCareerOnWeb()" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 px-4 py-2 text-xs font-extrabold text-slate-950 shrink-0 transition-colors">
+                                    Search Web
+                                </button>
+                            </div>
+                            <div id="custom-career-status" class="hidden text-xs text-slate-300 leading-relaxed rounded-lg bg-slate-900 border border-slate-800 p-3"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Zero-Typing Current Skills Selector (7 cols) -->
+                <div class="lg:col-span-7 glass-card rounded-2xl p-6 flex flex-col justify-between space-y-6">
+                    <div class="space-y-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider text-cyan-400">2. Current Skills Selection (Zero-Typing UX)</h2>
+                                <p class="text-xs text-slate-400 mt-0.5">Click skills you know. Page 2 will generate a 100-mark assessment (15 MCQs + 3 Coding Problems) for each skill.</p>
+                            </div>
+                            <button type="button" onclick="openSkillsModal()" class="rounded-xl border border-cyan-500/50 bg-cyan-500/15 hover:bg-cyan-500/25 px-3.5 py-2 text-xs font-bold text-cyan-300 transition-all flex items-center gap-1.5">
+                                <span>+ More Skills (85+ Catalog)</span>
+                            </button>
+                        </div>
+
+                        <!-- Active Selected Skills Tray -->
+                        <div class="rounded-xl border border-slate-800 bg-slate-950/90 p-4">
+                            <div class="flex items-center justify-between mb-2.5">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Selected Skills for Assessment (<span id="selected-skills-count" class="text-cyan-400">3</span>)</span>
+                                <span class="text-[11px] text-slate-500">Click × to remove</span>
+                            </div>
+                            <div id="active-skills-tray" class="flex flex-wrap gap-2 min-h-[36px]"></div>
+                        </div>
+
+                        <!-- Top 18 Popular Programming Languages & Skills -->
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-slate-300">Top 18 Popular Languages & Technologies (Click to Toggle)</span>
+                                <button type="button" onclick="openSkillsModal()" class="text-xs font-semibold text-purple-400 hover:text-purple-300 underline">Search All 85+ Skills →</button>
+                            </div>
+                            <div id="top-18-skills-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+                        </div>
+                    </div>
+
+                    <!-- Primary Action CTA Button -->
+                    <div class="pt-4 border-t border-slate-800/80 space-y-3">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>Each selected skill unlocks a <strong class="text-cyan-300">50M MCQ + 50M Coding</strong> proctored exam</span>
+                            <span class="text-emerald-400 font-semibold">● Ready to Sync</span>
+                        </div>
+                        <button type="button" onclick="saveProfileAndGoToPage2()" class="w-full rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:via-blue-500 hover:to-purple-500 py-4 px-6 text-sm sm:text-base font-extrabold text-white shadow-xl shadow-cyan-500/20 transition-all flex items-center justify-center gap-3">
+                            <span>Save & Sync Profile to Agents → Start Skill Assessments</span>
+                            <span class="text-lg">➔</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- PAGE 2: PROCTORED SKILL-BY-SKILL ASSESSMENT ENGINE (100 Marks/Skill)  -->
+    <!-- ===================================================================== -->
+    <section id="page-2" class="hidden min-h-[calc(100vh-64px)] w-full py-8 px-4 sm:px-8 fade-in">
+        <div class="max-w-7xl mx-auto space-y-6">
+
+            <!-- Skill Selector Header & Overall Completion Bar -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="rounded-full bg-cyan-500/15 border border-cyan-500/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-cyan-300">Page 2 of 3 • Agent 1 Proctored Verification</span>
+                            <span class="rounded-full bg-rose-500/15 border border-rose-500/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-rose-300">🛡️ Anti-Paste Active</span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-white mt-1">Skill-by-Skill Competency Assessment Arena (100 Marks Each)</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Complete Stage 1 (15 Tiered MCQs = 50 Marks) to unlock Stage 2 (3 Coding Challenges = 50 Marks) for each skill.</p>
+                    </div>
+
+                    <!-- Unlock Page 3 CTA Button -->
+                    <div class="flex items-center gap-3">
+                        <button id="btn-proceed-page3" onclick="tryNavigateToPage3()" class="rounded-xl border border-slate-700 bg-slate-800/90 px-5 py-3 text-xs sm:text-sm font-extrabold text-slate-400 transition-all flex items-center gap-2">
+                            <span>🔒 Complete All Skills to Unlock Spider Charts (Page 3)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Skill Switcher Cards (1 card per selected skill) -->
+                <div class="mt-5">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Your Selected Skills (Click any skill to take or retake its assessment)</p>
+                    <div id="p2-skill-tabs" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- Active Skill Assessment Workspace -->
+            <div id="assessment-workspace" class="glass-card rounded-2xl p-6 sm:p-8">
+                <!-- Dynamically populated by renderActiveSkillAssessment() -->
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- PAGE 3: DUAL SPIDER CHARTS (RADAR ANALYTICS) & AGENTIC ROADMAP        -->
+    <!-- ===================================================================== -->
+    <section id="page-3" class="hidden min-h-[calc(100vh-64px)] w-full py-8 px-4 sm:px-8 fade-in">
+        <div class="max-w-7xl mx-auto space-y-8">
+
+            <!-- Page 3 Banner -->
+            <div class="glass-card rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="rounded-full bg-emerald-500/15 border border-emerald-500/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-emerald-300">Page 3 of 3 • Multi-Agent Telemetry Complete</span>
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-white mt-1">Skill Depth Spider Charts & Target Career Gap Matrix</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Visualizing verified 100-mark assessment depth vs. benchmark requirements for <span id="p3-target-career-label" class="text-cyan-300 font-bold">Full Stack Developer</span>.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="navigateToPage(2)" class="rounded-xl border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 px-4 py-2.5 text-xs font-bold text-cyan-300 transition-colors">
+                        ← Back to Assessments (Retake Any Exam)
+                    </button>
+                    <button onclick="toggleProfileDrawer(true)" class="rounded-xl border border-purple-500/40 bg-purple-500/15 hover:bg-purple-500/25 px-4 py-2.5 text-xs font-bold text-purple-200 transition-colors">
+                        👤 View Learner Profile Card
+                    </button>
+                </div>
+            </div>
+
+            <!-- DUAL SPIDER CHARTS (SIDE-BY-SIDE) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- SPIDER CHART 1: Assessed Skill Depth Matrix -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Agent 1 • Skill Depth Telemetry</span>
+                                <h3 class="text-lg font-extrabold text-white">Spider Chart 1: My Assessed Skill Depth</h3>
+                                <p class="text-xs text-slate-400">Plots Total Score (/100) vs. MCQ Conceptual (%) & Coding Practical (%)</p>
+                            </div>
+                            <div class="text-right">
+                                <span id="p3-avg-score-badge" class="rounded-xl bg-cyan-500/15 border border-cyan-500/40 px-3 py-1.5 text-sm font-black text-cyan-300">Avg: 82/100</span>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="flex flex-wrap items-center justify-center gap-4 mt-4 text-xs">
+                            <span class="flex items-center gap-1.5 font-semibold text-cyan-300">
+                                <span class="h-3 w-3 rounded-sm bg-cyan-400 inline-block"></span> Total Skill Depth (/100)
+                            </span>
+                            <span class="flex items-center gap-1.5 font-semibold text-purple-300">
+                                <span class="h-3 w-3 rounded-sm bg-purple-400 inline-block"></span> Practical Coding Mastery (%)
+                            </span>
+                            <span class="flex items-center gap-1.5 font-semibold text-emerald-300">
+                                <span class="h-3 w-3 rounded-sm bg-emerald-400 inline-block"></span> Conceptual MCQ Mastery (%)
+                            </span>
+                        </div>
+
+                        <!-- SVG Container for Spider Chart 1 -->
+                        <div id="spider-chart-1-container" class="my-4 flex items-center justify-center min-h-[340px]"></div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 text-xs text-slate-300">
+                        <strong class="text-cyan-400">Agent 1 Diagnostic Note:</strong> Spider axes dynamically scale across all verified skills. Skills below 60/100 trigger automatic remedial coding modules in Agent 2.
+                    </div>
+                </div>
+
+                <!-- SPIDER CHART 2: Current Skills vs Target Career Benchmark -->
+                <div class="glass-card-violet rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-purple-300">Agent 2 • Career Alignment Radar</span>
+                                <h3 class="text-lg font-extrabold text-white">Spider Chart 2: My Skills vs. Target Career Goal</h3>
+                                <p class="text-xs text-slate-400">Compares your verified scores & missing skills against <span id="p3-chart2-career" class="text-purple-300 font-semibold">Full Stack Developer</span></p>
+                            </div>
+                            <div class="text-right">
+                                <span id="p3-readiness-badge" class="rounded-xl bg-purple-500/20 border border-purple-500/40 px-3 py-1.5 text-sm font-black text-purple-200">Match: 48%</span>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="flex flex-wrap items-center justify-center gap-5 mt-4 text-xs">
+                            <span class="flex items-center gap-1.5 font-semibold text-cyan-300">
+                                <span class="h-3 w-3 rounded-sm bg-cyan-400 inline-block"></span> Your Current Skill Readiness (%)
+                            </span>
+                            <span class="flex items-center gap-1.5 font-semibold text-rose-400">
+                                <span class="h-3 w-3 rounded-sm bg-rose-500 inline-block"></span> Target Career Required Benchmark (%)
+                            </span>
+                        </div>
+
+                        <!-- SVG Container for Spider Chart 2 -->
+                        <div id="spider-chart-2-container" class="my-4 flex items-center justify-center min-h-[340px]"></div>
+                    </div>
+
+                    <div id="p3-gap-summary-box" class="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 text-xs text-slate-200">
+                        <!-- Dynamically shows missing skills & weak skills -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- DETAILED SKILL TELEMETRY LEDGER + RETAKE ACTION -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">Verified Skill Assessment Breakdown (100-Mark Scale)</h3>
+                        <p class="text-xs text-slate-400">Need a higher spider chart score? Click "Retake Exam" on any skill to get a fresh set of 15 MCQs + 3 Coding Problems.</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+                                <th class="py-3 px-4">Skill</th>
+                                <th class="py-3 px-4">MCQ Breakdown (E/M/H)</th>
+                                <th class="py-3 px-4">MCQ Score (/50)</th>
+                                <th class="py-3 px-4">Coding Score (/50)</th>
+                                <th class="py-3 px-4">Total Depth (/100)</th>
+                                <th class="py-3 px-4">Inferred Tier</th>
+                                <th class="py-3 px-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p3-telemetry-table" class="divide-y divide-slate-800/70"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AGENT 2 ADAPTIVE ROADMAP & AGENT 3 AI MENTOR -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Agent 2: Adaptive Learning Path (7 Cols) -->
+                <div class="lg:col-span-7 glass-card rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-purple-400">Agent 2 • Adaptive Curriculum Planner</span>
+                            <h3 class="text-lg font-extrabold text-white">Personalized Skill Gap & Remedial Roadmap</h3>
+                        </div>
+                        <span id="p3-roadmap-progress" class="rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-1 text-xs font-bold text-emerald-300">0% Completed</span>
+                    </div>
+                    <div id="p3-roadmap-list" class="space-y-3 max-h-[460px] overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- Agent 3: Interactive AI Mentor Chat (5 Cols) -->
+                <div class="lg:col-span-5 glass-card rounded-2xl p-6 flex flex-col h-[550px]">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 text-white font-black shadow-lg">
+                                AI
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-white">Agent 3: Adaptive AI Mentor</h3>
+                                <p class="text-[11px] font-semibold text-emerald-400">●Synced with Exam & Spider Telemetry</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="p3-chat-messages" class="flex-1 overflow-y-auto py-4 space-y-3 pr-1 text-xs leading-relaxed"></div>
+
+                    <div class="pt-3 border-t border-slate-800 shrink-0 space-y-2">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button onclick="sendQuickMentorPrompt('Analyze my Spider Chart gaps')" class="rounded-lg border border-slate-700 bg-slate-900 hover:border-cyan-400 px-2.5 py-1 text-[11px] text-cyan-300 transition-colors">📊 Analyze Spider Gaps</button>
+                            <button onclick="sendQuickMentorPrompt('Which skill should I study first?')" class="rounded-lg border border-slate-700 bg-slate-900 hover:border-purple-400 px-2.5 py-1 text-[11px] text-purple-300 transition-colors">🎯 Next Priority Skill</button>
+                            <button onclick="sendQuickMentorPrompt('How can I improve my Coding score?')" class="rounded-lg border border-slate-700 bg-slate-900 hover:border-emerald-400 px-2.5 py-1 text-[11px] text-emerald-300 transition-colors">💻 Boost Coding Score</button>
+                        </div>
+                        <form onsubmit="handleMentorChatSubmit(event)" class="flex gap-2">
+                            <input id="p3-chat-input" type="text" placeholder="Ask Agent 3 about your scores, gaps, or career path..." class="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none">
+                            <button type="submit" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 transition-colors">Send</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- COMPLETE APPLICATION JAVASCRIPT ENGINE                                -->
+    <!-- ===================================================================== -->
+    <script>
+        // =====================================================================
+        // 1. CATALOGS: TOP 18 SKILLS, 85+ FULL CATALOG, AND 10 POPULAR CAREERS
+        // =====================================================================
+        const TOP_18_SKILLS = [
+            "Python", "SQL", "HTML", "CSS", "JavaScript", "TypeScript",
+            "React", "Node.js", "Java", "C++", "C#", "Go",
+            "Rust", "Git", "Docker", "AWS", "MongoDB", "PyTorch"
+        ];
+
+        const FULL_SKILLS_CATALOG = [
+            // Languages
+            { name: "Python", category: "Languages" }, { name: "JavaScript", category: "Languages" },
+            { name: "TypeScript", category: "Languages" }, { name: "Java", category: "Languages" },
+            { name: "C++", category: "Languages" }, { name: "C#", category: "Languages" },
+            { name: "Go", category: "Languages" }, { name: "Rust", category: "Languages" },
+            { name: "C", category: "Languages" }, { name: "Kotlin", category: "Languages" },
+            { name: "Swift", category: "Languages" }, { name: "PHP", category: "Languages" },
+            { name: "Ruby", category: "Languages" }, { name: "Dart", category: "Languages" },
+            { name: "Scala", category: "Languages" }, { name: "R", category: "Languages" },
+            { name: "Bash / Shell", category: "Languages" }, { name: "Solidity", category: "Languages" },
+            // Web & Mobile
+            { name: "HTML", category: "Web & Mobile" }, { name: "CSS", category: "Web & Mobile" },
+            { name: "React", category: "Web & Mobile" }, { name: "Node.js", category: "Web & Mobile" },
+            { name: "Next.js", category: "Web & Mobile" }, { name: "Vue.js", category: "Web & Mobile" },
+            { name: "Angular", category: "Web & Mobile" }, { name: "Svelte", category: "Web & Mobile" },
+            { name: "Tailwind CSS", category: "Web & Mobile" }, { name: "Express.js", category: "Web & Mobile" },
+            { name: "Django", category: "Web & Mobile" }, { name: "FastAPI", category: "Web & Mobile" },
+            { name: "Flask", category: "Web & Mobile" }, { name: "Spring Boot", category: "Web & Mobile" },
+            { name: "Flutter", category: "Web & Mobile" }, { name: "React Native", category: "Web & Mobile" },
+            { name: "GraphQL", category: "Web & Mobile" }, { name: "REST APIs", category: "Web & Mobile" },
+            { name: "Three.js / WebGL", category: "Web & Mobile" }, { name: "Redux", category: "Web & Mobile" },
+            // Data & AI
+            { name: "PyTorch", category: "Data & AI" }, { name: "TensorFlow", category: "Data & AI" },
+            { name: "Scikit-Learn", category: "Data & AI" }, { name: "Pandas", category: "Data & AI" },
+            { name: "NumPy", category: "Data & AI" }, { name: "LangChain", category: "Data & AI" },
+            { name: "RAG Architectures", category: "Data & AI" }, { name: "LLM Fine-Tuning", category: "Data & AI" },
+            { name: "Computer Vision", category: "Data & AI" }, { name: "NLP", category: "Data & AI" },
+            { name: "Apache Spark", category: "Data & AI" }, { name: "Kafka", category: "Data & AI" },
+            { name: "Airflow", category: "Data & AI" }, { name: "Tableau", category: "Data & AI" },
+            { name: "Power BI", category: "Data & AI" }, { name: "Statistics", category: "Data & AI" },
+            // Databases
+            { name: "SQL", category: "Databases" }, { name: "PostgreSQL", category: "Databases" },
+            { name: "MySQL", category: "Databases" }, { name: "MongoDB", category: "Databases" },
+            { name: "Redis", category: "Databases" }, { name: "Firebase", category: "Databases" },
+            { name: "Supabase", category: "Databases" }, { name: "Elasticsearch", category: "Databases" },
+            { name: "Pinecone / Vector DB", category: "Databases" }, { name: "Cassandra", category: "Databases" },
+            { name: "DynamoDB", category: "Databases" }, { name: "Neo4j", category: "Databases" },
+            // Cloud & DevOps
+            { name: "Git", category: "Cloud & DevOps" }, { name: "Docker", category: "Cloud & DevOps" },
+            { name: "Kubernetes", category: "Cloud & DevOps" }, { name: "AWS", category: "Cloud & DevOps" },
+            { name: "Google Cloud (GCP)", category: "Cloud & DevOps" }, { name: "Microsoft Azure", category: "Cloud & DevOps" },
+            { name: "Terraform", category: "Cloud & DevOps" }, { name: "CI/CD Pipelines", category: "Cloud & DevOps" },
+            { name: "GitHub Actions", category: "Cloud & DevOps" }, { name: "Linux Administration", category: "Cloud & DevOps" },
+            { name: "Nginx", category: "Cloud & DevOps" }, { name: "Prometheus & Grafana", category: "Cloud & DevOps" },
+            // Security & CS
+            { name: "Data Structures & Algorithms", category: "Security & CS" },
+            { name: "System Design", category: "Security & CS" },
+            { name: "Cybersecurity", category: "Security & CS" },
+            { name: "Penetration Testing", category: "Security & CS" },
+            { name: "Cryptography", category: "Security & CS" },
+            { name: "Network Security", category: "Security & CS" },
+            { name: "Operating Systems", category: "Security & CS" },
+            { name: "Unity / C# 3D", category: "Security & CS" },
+            { name: "Unreal Engine", category: "Security & CS" }
+        ];
+
+        const POPULAR_CAREERS = {
+            "Full Stack Developer": {
+                requiredSkills: ["HTML", "CSS", "JavaScript", "React", "Node.js", "SQL", "Git"],
+                benchmark: 88
+            },
+            "Data Scientist": {
+                requiredSkills: ["Python", "SQL", "Statistics", "Pandas", "Scikit-Learn", "PyTorch", "Tableau"],
+                benchmark: 88
+            },
+            "AI / ML Engineer": {
+                requiredSkills: ["Python", "PyTorch", "TensorFlow", "RAG Architectures", "LangChain", "Docker", "AWS"],
+                benchmark: 90
+            },
+            "Frontend Developer": {
+                requiredSkills: ["HTML", "CSS", "JavaScript", "TypeScript", "React", "Tailwind CSS", "Next.js"],
+                benchmark: 86
+            },
+            "Backend Engineer": {
+                requiredSkills: ["Python", "Node.js", "SQL", "PostgreSQL", "Docker", "Redis", "REST APIs"],
+                benchmark: 88
+            },
+            "Cloud & DevOps Engineer": {
+                requiredSkills: ["Linux Administration", "Docker", "Kubernetes", "AWS", "Terraform", "CI/CD Pipelines", "Git"],
+                benchmark: 88
+            },
+            "Cybersecurity Analyst": {
+                requiredSkills: ["Cybersecurity", "Network Security", "Linux Administration", "Python", "Penetration Testing", "Cryptography"],
+                benchmark: 87
+            },
+            "Mobile App Developer": {
+                requiredSkills: ["JavaScript", "React Native", "Flutter", "Dart", "Swift", "Kotlin", "Firebase"],
+                benchmark: 85
+            },
+            "Data Engineer": {
+                requiredSkills: ["Python", "SQL", "PostgreSQL", "Apache Spark", "Kafka", "Airflow", "AWS"],
+                benchmark: 88
+            },
+            "Game & 3D Developer": {
+                requiredSkills: ["C++", "C#", "Unity / C# 3D", "Three.js / WebGL", "JavaScript", "Data Structures & Algorithms"],
+                benchmark: 86
+            }
+        };
+
+        // =====================================================================
+        // 2. APPLICATION STATE
+        // =====================================================================
+        const state = {
+            currentPage: 1,
+            userName: "Sai Saran",
+            userAge: 19,
+            selectedSkills: ["Python", "SQL", "HTML"],
+            targetCareer: "Full Stack Developer",
+            activeModalCategory: "All",
+            activeAssessmentSkill: "Python",
+            proctorViolations: 0,
+            assessments: {},
+            roadmapChecked: {}
+        };
+
+        // =====================================================================
+        // 3. QUESTION GENERATOR (15 MCQs [5E, 5M, 5H] + 3 CODING CHALLENGES)
+        // =====================================================================
+        const CURATED_MCQ_BANKS = {
+            "Python": [
+                { diff: "Easy", marks: 2, q: "What is the output type of `type([1, 2, 3])` in Python?", options: ["<class 'tuple'>", "<class 'list'>", "<class 'set'>", "<class 'dict'>"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which keyword is used to define a generator function in Python?", options: ["return", "yield", "async", "emit"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "What does `'hello'.upper()` evaluate to?", options: ["'Hello'", "'HELLO'", "'hello'", "TypeError"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which collection type in Python stores unique, unordered elements?", options: ["list", "set", "tuple", "bytearray"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "What is the result of `7 // 2` in Python 3?", options: ["3.5", "3", "4", "1"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "What is the time complexity of looking up a key in a Python `dict` on average?", options: ["O(n)", "O(1)", "O(log n)", "O(n log n)"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "Why is using `def add_item(x, items=[])` dangerous in Python?", options: ["SyntaxError at runtime", "Default mutable list is shared across function calls", "It creates a memory leak in C", "Lists cannot be passed as arguments"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "What does `*args` collect inside a Python function signature?", options: ["Keyword arguments as a dict", "Positional arguments as a tuple", "Global variables", "Generator iterators"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "Which dunder method controls context manager entry in a `with` block?", options: ["__init__", "__enter__", "__open__", "__start__"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "What does `[x*2 for x in range(4) if x % 2 == 0]` return?", options: ["[0, 2, 4, 6]", "[0, 4]", "[2, 6]", "[0, 2]"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "How does CPython's Global Interpreter Lock (GIL) impact multithreaded CPU-bound Python code?", options: ["Allows all cores to execute bytecode simultaneously", "Serializes bytecode execution to one thread at a time per process", "Automatically converts threads to processes", "Disables garbage collection"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "In Python's Method Resolution Order (MRO), which algorithm resolves diamond inheritance?", options: ["Depth-First Search", "C3 Linearization", "Dijkstra's Resolution", "Breadth-First Topological Sort"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "What is the primary purpose of declaring `__slots__` in a Python class?", options: ["Encrypts attributes", "Eliminates per-instance `__dict__` to save memory and speed up attribute access", "Enables multithreading", "Auto-generates SQL tables"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "Which module allows inspecting and disassembling CPython bytecode instructions?", options: ["sys", "dis", "ast", "ctypes"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "What happens when a descriptor defines both `__get__` and `__set__`?", options: ["It becomes a non-data descriptor", "It becomes a data descriptor taking precedence over instance `__dict__`", "It raises AttributeError", "It bypasses metaclass creation"], ans: 1 }
+            ],
+            "SQL": [
+                { diff: "Easy", marks: 2, q: "Which SQL clause is used to filter rows BEFORE grouping?", options: ["HAVING", "WHERE", "GROUP BY", "ORDER BY"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which aggregate function returns the total number of rows matching a query?", options: ["SUM()", "COUNT()", "TOTAL()", "LEN()"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which keyword removes duplicate rows from a `SELECT` query result?", options: ["UNIQUE", "DISTINCT", "SINGLE", "DEDUPE"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "How do you sort results in descending order in SQL?", options: ["SORT DESC", "ORDER BY column DESC", "GROUP BY DESC", "ALIGN DOWN"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which operator checks if a column value is `NULL`?", options: ["= NULL", "IS NULL", "== NULL", "NULL?"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "What is the difference between `INNER JOIN` and `LEFT JOIN`?", options: ["INNER JOIN is slower", "LEFT JOIN preserves all rows from the left table even with no match on the right", "LEFT JOIN removes NULL values", "They are identical in ANSI SQL"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "Which SQL clause filters groups created by `GROUP BY`?", options: ["WHERE", "HAVING", "FILTER", "WHEN"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "What does `UNION ALL` do differently compared to `UNION`?", options: ["Sorts rows alphabetically", "Retains duplicate rows and avoids deduplication overhead", "Joins columns horizontally", "Deletes old tables"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "In window functions, what does `ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC)` compute?", options: ["Total department salary", "Sequential rank per department starting at 1 without ties", "Global table row count", "Average salary"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "Which normal form eliminates transitive dependencies on the primary key?", options: ["1NF", "3NF", "2NF", "0NF"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "Why can applying a function like `WHERE YEAR(created_at) = 2026` degrade B-Tree index performance?", options: ["Syntax error in SQL", "Makes the predicate non-SARGable, forcing a full index or table scan", "Locks the database master node", "Drops foreign keys"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "Which transaction isolation level prevents phantom reads in standard ACID databases?", options: ["READ UNCOMMITTED", "SERIALIZABLE", "READ COMMITTED", "NOLOCK"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "What is the difference between `RANK()` and `DENSE_RANK()` when ties occur?", options: ["RANK() throws an error", "RANK() skips subsequent rank numbers after ties; DENSE_RANK() does not skip", "DENSE_RANK() randomizes order", "No difference"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "In query execution plans, when is a Hash Join typically preferred over a Nested Loop Join?", options: ["When tables have 2 rows", "For large, unsorted inputs with equijoin predicates", "Only on non-equijoins", "When memory is zero"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "What problem does Write-Ahead Logging (WAL) primarily solve in relational DBMS?", options: ["CSS rendering", "Crash recovery and durability (ACID) without flushing data pages on every commit", "Query syntax highlighting", "Cross-site scripting"], ans: 1 }
+            ],
+            "HTML": [
+                { diff: "Easy", marks: 2, q: "What does `<!DOCTYPE html>` declare at the top of an HTML document?", options: ["Links a CSS file", "Instructs the browser to render in standards-compliant HTML5 mode", "Starts a JavaScript loop", "Imports XML"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which HTML element represents the main dominant content of the `<body>`?", options: ["<section>", "<main>", "<header>", "<aside>"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which attribute on `<img>` provides accessible fallback text for screen readers?", options: ["title", "alt", "srcset", "caption"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which tag creates an ordered (numbered) list?", options: ["<ul>", "<ol>", "<dl>", "<list>"], ans: 1 },
+                { diff: "Easy", marks: 2, q: "Which attribute opens an `<a>` hyperlink in a new browser tab?", options: ["new='tab'", "target='_blank'", "href='_new'", "rel='open'"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "What is the security purpose of adding `rel='noopener noreferrer'` to `target='_blank'` links?", options: ["Makes links blue", "Prevents the opened page from accessing `window.opener` (tabnabbing protection)", "Speeds up DNS", "Compresses images"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "How do `<script defer>` and `<script async>` differ during HTML parsing?", options: ["They are identical", "`defer` executes in order after HTML parsing completes; `async` executes immediately once downloaded", "`defer` blocks HTML parsing", "`async` only works offline"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "Which HTML5 element is designed to encapsulate native modal dialog boxes?", options: ["<popup>", "<dialog>", "<modal>", "<window>"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "How are custom data attributes validly defined on HTML elements?", options: ["custom-id='1'", "data-* (e.g., data-user-id='1')", "meta-id='1'", "prop:id='1'"], ans: 1 },
+                { diff: "Medium", marks: 3, q: "Which `<input>` attribute enforces pattern validation using a Regular Expression?", options: ["regex", "pattern", "validate", "match"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "What is the purpose of `aria-live='polite'` in accessible web applications?", options: ["Plays background music", "Announces dynamic DOM updates to screen readers at the next graceful idle moment", "Blocks keyboard navigation", "Translates text"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "In Web Components, what does `element.attachShadow({ mode: 'open' })` accomplish?", options: ["Adds a CSS drop-shadow", "Creates an encapsulated Shadow DOM tree accessible via `element.shadowRoot`", "Hides the element", "Clones the document"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "How does the browser use `<link rel='preload' as='font' crossorigin>`?", options: ["Deletes cached fonts", "Prioritizes early high-priority fetching of critical fonts before CSS is parsed", "Disables web fonts", "Loads fonts last"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "Why does `<template>` content not render immediately when the page loads?", options: ["Browser bug", "Its `DocumentFragment` is inert until cloned and mounted via JavaScript", "Missing CSS", "Requires PHP"], ans: 1 },
+                { diff: "Hard", marks: 5, q: "In responsive images, how do `srcset` width descriptors (`w`) interact with `sizes`?", options: ["They crop the SVG", "Allows the browser to calculate effective pixel density and download the optimal image source", "Forces 4K download", "Only works in tables"], ans: 1 }
+            ]
+        };
+
+        function getMcqQuestionsForSkill(skill, attemptVersion = 0) {
+            if (CURATED_MCQ_BANKS[skill] && attemptVersion === 0) {
+                return CURATED_MCQ_BANKS[skill];
+            }
+
+            const vTag = attemptVersion > 0 ? ` [Retake Set v${attemptVersion + 1}]` : "";
+            const easyTemplates = [
+                { q: `In ${skill}${vTag}, what is the primary benefit of modularizing code into reusable units?`, options: ["Increases syntax errors", "Improves maintainability, testing isolation, and readability", "Slows down compilation by 10x", "Prevents version control"], ans: 1 },
+                { q: `Which practice is essential when initializing a production ${skill}${vTag} environment?`, options: ["Hardcoding credentials in source files", "Isolating configuration and secrets via environment variables", "Disabling all error logs", "Running everything as root without backups"], ans: 1 },
+                { q: `When debugging a failing routine in ${skill}${vTag}, what should be inspected first?`, options: ["The monitor brightness", "Stack trace, input payload types, and boundary conditions", "Randomly deleting files", "Reinstalling the OS"], ans: 1 },
+                { q: `What role does automated unit testing play in a ${skill}${vTag} workflow?`, options: ["Replaces the compiler", "Verifies that individual functions return expected outputs for known inputs", "Slows down runtime execution in production", "Styles the UI"], ans: 1 },
+                { q: `In ${skill}${vTag}, why are descriptive identifier and variable conventions important?`, options: ["Required by CPU cache", "Reduces cognitive load during code review and maintenance", "Makes binary files smaller", "Avoids network latency"], ans: 1 }
+            ];
+
+            const medTemplates = [
+                { q: `How do you prevent race conditions or inconsistent state in concurrent ${skill}${vTag} operations?`, options: ["Ignore return values", "Use immutable state, atomic operations, or proper synchronization primitives", "Use global mutable variables everywhere", "Disable network timeouts"], ans: 1 },
+                { q: `When profiling a bottleneck in a ${skill}${vTag} service, which metric indicates algorithmic inefficiency?`, options: ["Font size", "Asymptotic growth in CPU/memory consumption as input size N scales", "Number of comments in code", "File extension length"], ans: 1 },
+                { q: `What is the best way to handle external I/O or network failures in ${skill}${vTag}?`, options: ["Crash silently", "Implement structured exception handling with timeouts and exponential backoff retries", "Use infinite synchronous while loops", "Log passwords to stdout"], ans: 1 },
+                { q: `In ${skill}${vTag}, how does dependency injection improve software architecture?`, options: ["Increases tight coupling", "Decouples component creation from execution, enabling easy mocking and testing", "Doubles memory usage", "Eliminates need for interfaces"], ans: 1 },
+                { q: `When optimizing data throughput in ${skill}${vTag}, why is batching/pagination preferred over unbounded fetches?`, options: ["Unbounded fetches are illegal", "Prevents memory exhaustion (OOM) and bounds latency per request", "Batching deletes records", "Pagination disables indexes"], ans: 1 }
+            ];
+
+            const hardTemplates = [
+                { q: `In high-scale ${skill}${vTag} architectures, how do you guarantee idempotency across distributed retries?`, options: ["Restart the server on every request", "Assign deterministic idempotency keys and track state transitions atomically", "Use random sleep timers", "Disable TCP checksums"], ans: 1 },
+                { q: `What is the primary trade-off when introducing a multi-layer caching strategy in ${skill}${vTag}?`, options: ["Slower read speeds", "Cache invalidation complexity and bounded staleness vs. reduced downstream load", "Higher disk fragmentation", "Inability to use JSON"], ans: 1 },
+                { q: `How do memory leaks typically manifest in long-running ${skill}${vTag} processes?`, options: ["Immediate syntax error", "Unbounded retention of object references in closures, caches, or event listeners", "CPU fan turning off", "Faster garbage collection"], ans: 1 },
+                { q: `When securing ${skill}${vTag} pipelines against injection and untrusted input, what is the gold standard?`, options: ["Client-side hidden inputs", "Strict schema validation, parameterized execution, and least-privilege sandboxing", "Base64 encoding strings", "Obfuscating variable names"], ans: 1 },
+                { q: `In ${skill}${vTag} performance engineering, why does tail latency (P99) matter more than average latency?`, options: ["Average latency is always zero", "P99 captures worst-case user bottlenecks amplified across microservice fan-outs", "P99 is easier to calculate", "Average latency includes network cables"], ans: 1 }
+            ];
+
+            const rotateQuestions = (arr, diff, marks) => arr.map((item, idx) => {
+                const shift = (attemptVersion + idx) % 4;
+                const newOptions = [...item.options];
+                const correctText = item.options[item.ans];
+                const rotated = newOptions.slice(shift).concat(newOptions.slice(0, shift));
+                return {
+                    diff,
+                    marks,
+                    q: item.q,
+                    options: rotated,
+                    ans: rotated.indexOf(correctText)
+                };
+            });
+
+            return [
+                ...rotateQuestions(easyTemplates, "Easy", 2),
+                ...rotateQuestions(medTemplates, "Medium", 3),
+                ...rotateQuestions(hardTemplates, "Hard", 5)
+            ];
+        }
+
+        function getCodingChallengesForSkill(skill, attemptVersion = 0) {
+            const isRetake = attemptVersion > 0;
+            if (skill === "Python" && !isRetake) {
+                return [
+                    {
+                        diff: "Easy", marks: 10,
+                        title: "1. Filter & Square Even Numbers",
+                        desc: "Write a Python function `square_evens(nums)` that takes a list of integers and returns a new list containing the squares of only the even numbers.",
+                        example: "Input: [1, 2, 3, 4, 5]  →  Output: [4, 16]",
+                        starter: "def square_evens(nums):\n    # Write your Python solution below (Copy-Paste is disabled)\n    ",
+                        sampleSolution: "def square_evens(nums):\n    return [x * x for x in nums if x % 2 == 0]",
+                        keywords: ["def", "return", "%", "for"]
+                    },
+                    {
+                        diff: "Medium", marks: 15,
+                        title: "2. First Non-Repeating Character",
+                        desc: "Write a Python function `first_unique_char(s)` that returns the first non-repeating character in string `s`, or `None` if all characters repeat.",
+                        example: "Input: 'swiss'  →  Output: 'w'",
+                        starter: "def first_unique_char(s):\n    # Track character frequency and return first unique char\n    ",
+                        sampleSolution: "def first_unique_char(s):\n    counts = {}\n    for ch in s:\n        counts[ch] = counts.get(ch, 0) + 1\n    for ch in s:\n        if counts[ch] == 1:\n            return ch\n    return None",
+                        keywords: ["def", "for", "if", "return"]
+                    },
+                    {
+                        diff: "Hard", marks: 25,
+                        title: "3. Sliding Window Maximum Subarray Sum of Size K",
+                        desc: "Write an O(n) Python function `max_window_sum(arr, k)` that computes the maximum sum of any contiguous subarray of length `k`.",
+                        example: "Input: arr=[2, 1, 5, 1, 3, 2], k=3  →  Output: 9",
+                        starter: "def max_window_sum(arr, k):\n    # Implement O(n) sliding window algorithm\n    ",
+                        sampleSolution: "def max_window_sum(arr, k):\n    window = sum(arr[:k])\n    best = window\n    for i in range(k, len(arr)):\n        window += arr[i] - arr[i - k]\n        if window > best:\n            best = window\n    return best",
+                        keywords: ["def", "for", "range", "return"]
+                    }
+                ];
+            }
+
+            if (skill === "SQL" && !isRetake) {
+                return [
+                    {
+                        diff: "Easy", marks: 10,
+                        title: "1. Active Engineering Employees",
+                        desc: "Write a SQL query to select `id`, `name`, and `salary` from the `employees` table where `department = 'Engineering'` ordered by `salary` descending.",
+                        example: "Table: employees(id, name, department, salary)",
+                        starter: "-- Write your SQL query below (Copy-Paste is disabled)\nSELECT ",
+                        sampleSolution: "SELECT id, name, salary FROM employees WHERE department = 'Engineering' ORDER BY salary DESC;",
+                        keywords: ["select", "from", "where", "order"]
+                    },
+                    {
+                        diff: "Medium", marks: 15,
+                        title: "2. Department Average Salary Above 80,000",
+                        desc: "Write a SQL query returning `department` and `AVG(salary) AS avg_sal` from `employees`, grouped by `department`, keeping only departments with an average salary > 80000.",
+                        example: "Output columns: department, avg_sal",
+                        starter: "-- Group by department and filter aggregates with HAVING\nSELECT ",
+                        sampleSolution: "SELECT department, AVG(salary) AS avg_sal FROM employees GROUP BY department HAVING AVG(salary) > 80000;",
+                        keywords: ["select", "group", "having", "avg"]
+                    },
+                    {
+                        diff: "Hard", marks: 25,
+                        title: "3. Top 2 Earners per Department Using Window Function",
+                        desc: "Write a SQL query using a CTE and `DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC)` to retrieve the top 2 highest-paid employees in each department.",
+                        example: "Uses WITH ranked AS (...) SELECT * FROM ranked WHERE rnk <= 2",
+                        starter: "-- Use CTE and DENSE_RANK() window function\nWITH ranked AS (\n    ",
+                        sampleSolution: "WITH ranked AS (\n    SELECT id, name, department, salary,\n           DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rnk\n    FROM employees\n)\nSELECT id, name, department, salary FROM ranked WHERE rnk <= 2;",
+                        keywords: ["with", "over", "partition", "select"]
+                    }
+                ];
+            }
+
+            if (skill === "HTML" && !isRetake) {
+                return [
+                    {
+                        diff: "Easy", marks: 10,
+                        title: "1. Accessible Semantic Navigation Header",
+                        desc: "Write semantic HTML5 markup containing a `<header>` and `<nav aria-label='Main'>` with an unordered list `<ul>` of two `<a>` links.",
+                        example: "Elements required: <header>, <nav>, <ul>, <li>, <a>",
+                        starter: "<!-- Write semantic HTML5 markup below -->\n<header>\n  ",
+                        sampleSolution: "<header>\n  <nav aria-label=\"Main\">\n    <ul>\n      <li><a href=\"#home\">Home</a></li>\n      <li><a href=\"#about\">About</a></li>\n    </ul>\n  </nav>\n</header>",
+                        keywords: ["<header", "<nav", "<ul", "<a"]
+                    },
+                    {
+                        diff: "Medium", marks: 15,
+                        title: "2. Validated Accessible Registration Form",
+                        desc: "Create a `<form>` containing a `<label for='email'>`, an `<input type='email' id='email' required>`, and a `<button type='submit'>`.",
+                        example: "Must explicitly link <label> and <input> and enforce required email.",
+                        starter: "<!-- Build accessible HTML5 form -->\n<form>\n  ",
+                        sampleSolution: "<form action=\"/submit\" method=\"POST\">\n  <label for=\"email\">Email Address</label>\n  <input type=\"email\" id=\"email\" name=\"email\" required />\n  <button type=\"submit\">Register</button>\n</form>",
+                        keywords: ["<form", "<label", "<input", "required"]
+                    },
+                    {
+                        diff: "Hard", marks: 25,
+                        title: "3. Responsive Picture Element with Art Direction & Lazy Loading",
+                        desc: "Construct a `<picture>` element containing a `<source media='(min-width: 800px)' srcset='hero-lg.webp'>` and a fallback `<img src='hero-sm.jpg' alt='Hero banner' loading='lazy'>`.",
+                        example: "Uses <picture>, <source media srcset>, and <img alt loading='lazy'>",
+                        starter: "<!-- Write responsive <picture> markup -->\n<picture>\n  ",
+                        sampleSolution: "<picture>\n  <source media=\"(min-width: 800px)\" srcset=\"hero-lg.webp\" />\n  <img src=\"hero-sm.jpg\" alt=\"Hero banner\" loading=\"lazy\" />\n</picture>",
+                        keywords: ["<picture", "<source", "srcset", "<img"]
+                    }
+                ];
+            }
+
+            const vLabel = isRetake ? ` (Retake Set #${attemptVersion + 1})` : "";
+            return [
+                {
+                    diff: "Easy", marks: 10,
+                    title: `1. ${skill} Data Filtering & Validation Routine${vLabel}`,
+                    desc: `Write a clean ${skill} function or module \`filter_valid_records(items)\` that filters out empty/null entries from an input collection and returns the cleaned collection.`,
+                    example: `Input: ["alpha", "", "beta", null]  →  Output: ["alpha", "beta"]`,
+                    starter: `// ${skill} Easy Challenge (10 Marks) — Copy-Paste Disabled\nfunction filter_valid_records(items) {\n    \n}`,
+                    sampleSolution: `function filter_valid_records(items) {\n    const result = [];\n    for (const item of items) {\n        if (item !== null && item !== "") {\n            result.push(item);\n        }\n    }\n    return result;\n}`,
+                    keywords: ["function", "for", "if", "return"]
+                },
+                {
+                    diff: "Medium", marks: 15,
+                    title: `2. ${skill} Frequency Aggregation Map${vLabel}`,
+                    desc: `Implement a ${skill} routine \`aggregate_metrics(events)\` that counts occurrences of each event key and returns a key-value summary dictionary/map.`,
+                    example: `Input: ["login", "click", "login"]  →  Output: { login: 2, click: 1 }`,
+                    starter: `// ${skill} Medium Challenge (15 Marks) — Copy-Paste Disabled\nfunction aggregate_metrics(events) {\n    \n}`,
+                    sampleSolution: `function aggregate_metrics(events) {\n    const counts = {};\n    for (const ev of events) {\n        counts[ev] = (counts[ev] || 0) + 1;\n    }\n    return counts;\n}`,
+                    keywords: ["const", "for", "return"]
+                },
+                {
+                    diff: "Hard", marks: 25,
+                    title: `3. ${skill} Rate-Limited Retry & Backoff Executor${vLabel}`,
+                    desc: `Write a resilient ${skill} handler \`execute_with_retry(task, maxRetries)\` that attempts execution up to \`maxRetries\` times, tracks errors, and returns the verified payload.`,
+                    example: `Retries transient failures up to maxRetries before raising error.`,
+                    starter: `// ${skill} Hard Challenge (25 Marks) — Copy-Paste Disabled\nfunction execute_with_retry(task, maxRetries) {\n    \n}`,
+                    sampleSolution: `function execute_with_retry(task, maxRetries) {\n    let attempt = 0;\n    while (attempt < maxRetries) {\n        try {\n            return task(attempt);\n        } catch (err) {\n            attempt += 1;\n            if (attempt >= maxRetries) throw err;\n        }\n    }\n}`,
+                    keywords: ["while", "try", "catch", "return"]
+                }
+            ];
+        }
+
+        // =====================================================================
+        // 4. INITIALIZATION & PAGE NAVIGATION
+        // =====================================================================
+        function initSkillAssessmentState(skill, attemptVersion = 0) {
+            state.assessments[skill] = {
+                attemptVersion,
+                stage: "mcq",
+                currentMcqIndex: 0,
+                mcqAnswers: {},
+                mcqScore: 0,
+                easyScore: 0,
+                medScore: 0,
+                hardScore: 0,
+                codingSubmissions: {
+                    0: { code: "", score: 0, verified: false },
+                    1: { code: "", score: 0, verified: false },
+                    2: { code: "", score: 0, verified: false }
+                },
+                codingScore: 0,
+                totalScore: 0,
+                completed: false
+            };
+        }
+
+        function ensureAllSelectedSkillsInitialized() {
+            state.selectedSkills.forEach(skill => {
+                if (!state.assessments[skill]) {
+                    initSkillAssessmentState(skill, 0);
+                }
+            });
+            if (!state.selectedSkills.includes(state.activeAssessmentSkill)) {
+                state.activeAssessmentSkill = state.selectedSkills[0] || "Python";
+            }
+        }
+
+        function navigateToPage(pageNum) {
+            state.currentPage = pageNum;
+            document.getElementById("page-1").classList.toggle("hidden", pageNum !== 1);
+            document.getElementById("page-2").classList.toggle("hidden", pageNum !== 2);
+            document.getElementById("page-3").classList.toggle("hidden", pageNum !== 3);
+
+            document.getElementById("app-topbar").classList.toggle("hidden", pageNum === 1);
+
+            const b2 = document.getElementById("breadcrumb-p2");
+            const b3 = document.getElementById("breadcrumb-p3");
+            if (b2 && b3) {
+                if (pageNum === 2) {
+                    b2.className = "px-3 py-1.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30";
+                    b3.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white border border-transparent";
+                } else if (pageNum === 3) {
+                    b2.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white border border-transparent";
+                    b3.className = "px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-500/40";
+                }
+            }
+
+            if (pageNum === 2) {
+                ensureAllSelectedSkillsInitialized();
+                renderTopbarAndDrawer();
+                renderPage2SkillTabs();
+                renderActiveSkillAssessment();
+            } else if (pageNum === 3) {
+                renderTopbarAndDrawer();
+                renderPage3AnalyticsAndRoadmap();
+            }
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function areAllSkillsCompleted() {
+            return state.selectedSkills.length > 0 && state.selectedSkills.every(s => state.assessments[s] && state.assessments[s].completed);
+        }
+
+        function tryNavigateToPage3() {
+            if (!areAllSkillsCompleted()) {
+                const remaining = state.selectedSkills.filter(s => !state.assessments[s] || !state.assessments[s].completed);
+                showToast(
+                    "Assessment Gate Locked",
+                    `Please complete the 100-mark assessment for all selected skills (${remaining.join(", ")}) before unlocking Page 3 Spider Charts—or click '⚡ Demo: Complete All Skills' in the top bar.`,
+                    "cyan"
+                );
+                return;
+            }
+            navigateToPage(3);
+        }
+
+        // =====================================================================
+        // 5. PAGE 1: USER PROFILE UI FUNCTIONS
+        // =====================================================================
+        function getInitials(name) {
+            const parts = (name || "Learner").trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+
+        function syncProfileIdentityUI() {
+            const nameVal = document.getElementById("input-user-name").value.trim() || "Learner";
+            const ageVal = parseInt(document.getElementById("input-user-age").value, 10) || 19;
+            state.userName = nameVal;
+            state.userAge = ageVal;
+
+            const initials = getInitials(nameVal);
+            document.getElementById("p1-avatar-preview").textContent = initials;
+            document.getElementById("p1-name-preview").textContent = nameVal;
+            document.getElementById("p1-meta-preview").innerHTML = `Age: <span class="text-cyan-300 font-semibold">${ageVal}</span> • <span id="p1-skill-count-preview" class="text-purple-300 font-semibold">${state.selectedSkills.length} Skills Selected</span>`;
+        }
+
+        function adjustAge(delta) {
+            const input = document.getElementById("input-user-age");
+            let val = (parseInt(input.value, 10) || 19) + delta;
+            if (val < 12) val = 12;
+            if (val > 80) val = 80;
+            input.value = val;
+            syncProfileIdentityUI();
+        }
+
+        function toggleSkillSelection(skillName) {
+            const idx = state.selectedSkills.indexOf(skillName);
+            if (idx > -1) {
+                if (state.selectedSkills.length === 1) {
+                    showToast("Minimum 1 Skill Required", "Keep at least 1 skill selected for your assessment profile.", "cyan");
+                    return;
+                }
+                state.selectedSkills.splice(idx, 1);
+            } else {
+                state.selectedSkills.push(skillName);
+                if (!state.assessments[skillName]) {
+                    initSkillAssessmentState(skillName, 0);
+                }
+            }
+            renderPage1SkillsUI();
+            renderModalSkills();
+            syncProfileIdentityUI();
+        }
+
+        function renderPage1SkillsUI() {
+            const tray = document.getElementById("active-skills-tray");
+            document.getElementById("selected-skills-count").textContent = state.selectedSkills.length;
+            tray.innerHTML = state.selectedSkills.map(skill => `
+                <span class="inline-flex items-center gap-2 rounded-full bg-cyan-500/15 border border-cyan-400/50 px-3.5 py-1.5 text-xs font-bold text-cyan-200 shadow-sm">
+                    <span>✓ ${skill}</span>
+                    <button type="button" onclick="toggleSkillSelection('${skill.replace(/'/g, "\\'")}')" class="text-cyan-300 hover:text-rose-400 font-black leading-none">×</button>
+                </span>
+            `).join("");
+
+            const grid = document.getElementById("top-18-skills-grid");
+            grid.innerHTML = TOP_18_SKILLS.map(skill => {
+                const isSelected = state.selectedSkills.includes(skill);
+                const btnClasses = isSelected
+                    ? "border-cyan-400 bg-cyan-500/20 text-white shadow-md shadow-cyan-500/10"
+                    : "border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-600 hover:text-white";
+                const dotClasses = isSelected ? "bg-cyan-400" : "bg-slate-700";
+                return `
+                    <button type="button" onclick="toggleSkillSelection('${skill}')" class="flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs font-bold transition-all ${btnClasses}">
+                        <span class="truncate">${skill}</span>
+                        <span class="h-2.5 w-2.5 rounded-full ${dotClasses}"></span>
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function renderPage1CareerOvals() {
+            const container = document.getElementById("p1-career-ovals");
+            const careers = Object.keys(POPULAR_CAREERS);
+            const html = careers.map(role => {
+                const isSelected = state.targetCareer === role;
+                const cls = isSelected
+                    ? "border-purple-400 bg-gradient-to-r from-purple-600/40 to-cyan-600/30 text-white shadow-md shadow-purple-500/20"
+                    : "border-slate-800 bg-slate-950/80 text-slate-300 hover:border-purple-500/50 hover:text-white";
+                return `
+                    <button type="button" onclick="selectTargetCareer('${role}')" class="rounded-full border px-4 py-2 text-xs font-bold transition-all ${cls}">
+                        ${isSelected ? "● " : ""}${role}
+                    </button>
+                `;
+            }).join("");
+
+            const isCustom = !POPULAR_CAREERS[state.targetCareer];
+            const customCls = isCustom
+                ? "border-cyan-400 bg-cyan-500/20 text-cyan-200"
+                : "border-dashed border-cyan-500/50 bg-slate-950 text-cyan-300 hover:bg-cyan-500/10";
+
+            container.innerHTML = html + `
+                <button type="button" onclick="toggleCustomCareerPanel()" class="rounded-full border px-4 py-2 text-xs font-extrabold transition-all ${customCls}">
+                    🌐 + Other / Type Career
+                </button>
+            `;
+            document.getElementById("active-career-pill-header").textContent = state.targetCareer;
+        }
+
+        function selectTargetCareer(role) {
+            state.targetCareer = role;
+            document.getElementById("custom-career-panel").classList.add("hidden");
+            renderPage1CareerOvals();
+        }
+
+        function toggleCustomCareerPanel() {
+            const panel = document.getElementById("custom-career-panel");
+            panel.classList.toggle("hidden");
+            if (!panel.classList.contains("hidden")) {
+                document.getElementById("custom-career-input").focus();
+            }
+        }
+
+        async function lookupCustomCareerOnWeb() {
+            const input = document.getElementById("custom-career-input").value.trim();
+            if (!input) return;
+            const statusBox = document.getElementById("custom-career-status");
+            statusBox.classList.remove("hidden");
+            statusBox.innerHTML = `<span class="text-cyan-300 font-semibold animate-pulse">🌐 Querying live Wikipedia REST knowledge graph for "${input}"...</span>`;
+
+            let summaryText = "";
+            try {
+                const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(input)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    summaryText = data.extract || "";
+                }
+            } catch (err) {
+                summaryText = "";
+            }
+
+            const lower = (input + " " + summaryText).toLowerCase();
+            let inferred = ["Python", "SQL", "Git"];
+            if (lower.includes("web") || lower.includes("front") || lower.includes("ui")) {
+                inferred = ["HTML", "CSS", "JavaScript", "TypeScript", "React", "Next.js"];
+            } else if (lower.includes("quant") || lower.includes("finance") || lower.includes("trad")) {
+                inferred = ["Python", "C++", "SQL", "Statistics", "Pandas", "NumPy"];
+            } else if (lower.includes("robot") || lower.includes("embed") || lower.includes("iot") || lower.includes("hardware")) {
+                inferred = ["C++", "C", "Python", "Linux Administration", "PyTorch", "Git"];
+            } else if (lower.includes("block") || lower.includes("web3") || lower.includes("crypto")) {
+                inferred = ["Solidity", "Rust", "TypeScript", "JavaScript", "Cryptography", "Node.js"];
+            } else if (lower.includes("cloud") || lower.includes("sre") || lower.includes("platform")) {
+                inferred = ["Docker", "Kubernetes", "AWS", "Terraform", "Linux Administration", "CI/CD Pipelines"];
+            } else {
+                inferred = ["Python", "SQL", "JavaScript", "Docker", "AWS", "System Design"];
+            }
+
+            POPULAR_CAREERS[input] = {
+                requiredSkills: inferred,
+                benchmark: 88
+            };
+            state.targetCareer = input;
+            renderPage1CareerOvals();
+
+            statusBox.innerHTML = `
+                <div class="space-y-1.5">
+                    <p class="font-bold text-emerald-400">✓ Career Mapped: ${input}</p>
+                    <p class="text-slate-300">${summaryText ? summaryText.substring(0, 180) + "..." : "Synthesized industry competency benchmark via Agent 2 knowledge graph."}</p>
+                    <p class="text-cyan-300 font-semibold">Mapped Core Skills: ${inferred.join(", ")}</p>
+                </div>
+            `;
+        }
+
+        function openSkillsModal() {
+            document.getElementById("skills-modal").classList.remove("hidden");
+            renderModalCategories();
+            renderModalSkills();
+        }
+
+        function closeSkillsModal() {
+            document.getElementById("skills-modal").classList.add("hidden");
+        }
+
+        function renderModalCategories() {
+            const cats = ["All", "Languages", "Web & Mobile", "Data & AI", "Databases", "Cloud & DevOps", "Security & CS"];
+            document.getElementById("modal-category-tabs").innerHTML = cats.map(c => {
+                const active = state.activeModalCategory === c;
+                const cls = active
+                    ? "bg-cyan-500 text-slate-950 font-extrabold"
+                    : "bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold";
+                return `<button type="button" onclick="state.activeModalCategory='${c}'; renderModalCategories(); renderModalSkills();" class="rounded-lg px-3 py-1 text-xs transition-colors ${cls}">${c}</button>`;
+            }).join("");
+        }
+
+        function renderModalSkills() {
+            const query = (document.getElementById("modal-skill-search").value || "").toLowerCase().trim();
+            const filtered = FULL_SKILLS_CATALOG.filter(item => {
+                const matchCat = state.activeModalCategory === "All" || item.category === state.activeModalCategory;
+                const matchQuery = !query || item.name.toLowerCase().includes(query);
+                return matchCat && matchQuery;
+            });
+
+            document.getElementById("modal-selected-count").textContent = `${state.selectedSkills.length} skills selected for assessment`;
+            document.getElementById("modal-skills-grid").innerHTML = filtered.map(item => {
+                const isSelected = state.selectedSkills.includes(item.name);
+                const cls = isSelected
+                    ? "border-cyan-400 bg-cyan-500/20 text-white"
+                    : "border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700";
+                return `
+                    <button type="button" onclick="toggleSkillSelection('${item.name.replace(/'/g, "\\'")}')" class="flex items-center justify-between rounded-xl border p-2.5 text-left text-xs font-semibold transition-all ${cls}">
+                        <span class="truncate pr-2">${item.name}</span>
+                        <span class="text-cyan-400 font-black">${isSelected ? "✓" : "+"}</span>
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function addCustomSkillFromModal() {
+            const input = document.getElementById("modal-skill-search");
+            const val = input.value.trim();
+            if (!val) return;
+            if (!FULL_SKILLS_CATALOG.some(s => s.name.toLowerCase() === val.toLowerCase())) {
+                FULL_SKILLS_CATALOG.unshift({ name: val, category: "Languages" });
+            }
+            if (!state.selectedSkills.includes(val)) {
+                state.selectedSkills.push(val);
+                initSkillAssessmentState(val, 0);
+            }
+            input.value = "";
+            renderPage1SkillsUI();
+            renderModalSkills();
+            syncProfileIdentityUI();
+        }
+
+        function saveProfileAndGoToPage2() {
+            syncProfileIdentityUI();
+            if (state.selectedSkills.length === 0) {
+                showToast("Select At Least 1 Skill", "Please select at least one current skill to assess.", "rose");
+                return;
+            }
+            ensureAllSelectedSkillsInitialized();
+            state.activeAssessmentSkill = state.selectedSkills[0];
+            navigateToPage(2);
+        }
+
+        // =====================================================================
+        // 6. TOPBAR & USER PROFILE DRAWER
+        // =====================================================================
+        function renderTopbarAndDrawer() {
+            const initials = getInitials(state.userName);
+            document.getElementById("topbar-avatar").textContent = initials;
+            document.getElementById("topbar-name").textContent = state.userName;
+            document.getElementById("topbar-career").textContent = state.targetCareer;
+
+            document.getElementById("drawer-avatar").textContent = initials;
+            document.getElementById("drawer-name").textContent = state.userName;
+            document.getElementById("drawer-meta").textContent = `Age: ${state.userAge} • Target: ${state.targetCareer}`;
+            document.getElementById("drawer-career-badge").textContent = state.targetCareer;
+
+            const completedCount = state.selectedSkills.filter(s => state.assessments[s] && state.assessments[s].completed).length;
+            document.getElementById("topbar-assessed-count").textContent = `${completedCount}/${state.selectedSkills.length}`;
+
+            const drawerList = document.getElementById("drawer-skills-list");
+            drawerList.innerHTML = state.selectedSkills.map(skill => {
+                const a = state.assessments[skill];
+                const badge = a && a.completed
+                    ? `<span class="rounded-lg bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-xs font-extrabold text-emerald-300">${a.totalScore}/100</span>`
+                    : `<span class="rounded-lg bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-0.5 text-xs font-semibold text-cyan-300">${a && a.stage === 'coding' ? 'Coding Stage' : 'Pending Exam'}</span>`;
+                return `
+                    <div class="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5">
+                        <span class="text-xs font-bold text-white">${skill}</span>
+                        ${badge}
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function toggleProfileDrawer(show) {
+            const el = document.getElementById("profile-drawer-backdrop");
+            if (show) {
+                renderTopbarAndDrawer();
+                el.classList.remove("hidden");
+            } else {
+                el.classList.add("hidden");
+            }
+        }
+
+        // =====================================================================
+        // 7. PAGE 2: SKILL-BY-SKILL ASSESSMENT ENGINE
+        // =====================================================================
+        function renderPage2SkillTabs() {
+            const container = document.getElementById("p2-skill-tabs");
+            container.innerHTML = state.selectedSkills.map(skill => {
+                const a = state.assessments[skill];
+                const isActive = state.activeAssessmentSkill === skill;
+                let statusBadge = "";
+                if (a.completed) {
+                    statusBadge = `<span class="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-300">✓ ${a.totalScore}/100</span>`;
+                } else if (a.stage === "coding") {
+                    statusBadge = `<span class="rounded-full bg-purple-500/20 border border-purple-500/40 px-2.5 py-0.5 text-[11px] font-bold text-purple-300">Stage 2: Coding (MCQ ${a.mcqScore}/50)</span>`;
+                } else {
+                    const answeredCount = Object.keys(a.mcqAnswers).length;
+                    statusBadge = `<span class="rounded-full bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-cyan-300">Stage 1: ${answeredCount}/15 MCQs</span>`;
+                }
+
+                const cardBorder = isActive
+                    ? "border-cyan-400 bg-cyan-950/25 shadow-lg shadow-cyan-500/10"
+                    : "border-slate-800 bg-slate-950/80 hover:border-slate-700";
+
+                return `
+                    <div onclick="selectSkillForAssessment('${skill.replace(/'/g, "\\'")}')" class="cursor-pointer rounded-xl border p-4 transition-all ${cardBorder}">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-sm font-extrabold text-white truncate">${skill}</span>
+                            ${statusBadge}
+                        </div>
+                        <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-400">
+                            <span>Attempt #${a.attemptVersion + 1}</span>
+                            <span class="font-semibold text-cyan-400">${isActive ? "● Active Arena" : "Switch →"}</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            const btnP3 = document.getElementById("btn-proceed-page3");
+            if (areAllSkillsCompleted()) {
+                btnP3.className = "rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 px-6 py-3 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2";
+                btnP3.innerHTML = `<span>✓ All Skills Assessed! View Spider Charts (Page 3) →</span>`;
+            } else {
+                const done = state.selectedSkills.filter(s => state.assessments[s]?.completed).length;
+                btnP3.className = "rounded-xl border border-slate-700 bg-slate-800/90 px-5 py-3 text-xs sm:text-sm font-extrabold text-slate-300 hover:border-cyan-500/40 transition-all flex items-center gap-2";
+                btnP3.innerHTML = `<span>🔒 Complete All Skills (${done}/${state.selectedSkills.length}) to Unlock Page 3</span>`;
+            }
+        }
+
+        function selectSkillForAssessment(skill) {
+            state.activeAssessmentSkill = skill;
+            renderPage2SkillTabs();
+            renderActiveSkillAssessment();
+        }
+
+        function renderActiveSkillAssessment() {
+            const skill = state.activeAssessmentSkill;
+            const a = state.assessments[skill];
+            const workspace = document.getElementById("assessment-workspace");
+
+            if (a.completed) {
+                workspace.innerHTML = `
+                    <div class="space-y-6 fade-in">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                            <div>
+                                <span class="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-3 py-1 text-xs font-extrabold text-emerald-300">✓ Assessment Verified • Attempt #${a.attemptVersion + 1}</span>
+                                <h3 class="text-2xl font-extrabold text-white mt-2">${skill} — Final Competency Scorecard</h3>
+                                <p class="text-xs text-slate-400">Combined 100-Mark Evaluation (50M Tiered MCQs + 50M Proctored Coding)</p>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="retakeSkillAssessment('${skill.replace(/'/g, "\\'")}')" class="rounded-xl border border-purple-500/50 bg-purple-500/20 hover:bg-purple-500/30 px-5 py-3 text-xs font-extrabold text-purple-200 transition-all flex items-center gap-2">
+                                    <span>🔄 Retake Exam (Load Different Question Set #${a.attemptVersion + 2})</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="rounded-2xl border border-cyan-500/30 bg-slate-950 p-5">
+                                <p class="text-xs font-bold uppercase text-cyan-400">Stage 1: 15 MCQs</p>
+                                <p class="text-3xl font-black text-white mt-2">${a.mcqScore} <span class="text-base font-semibold text-slate-400">/ 50 Marks</span></p>
+                                <p class="text-xs text-slate-400 mt-2">Easy: ${a.easyScore}/10 • Medium: ${a.medScore}/15 • Hard: ${a.hardScore}/25</p>
+                            </div>
+                            <div class="rounded-2xl border border-purple-500/30 bg-slate-950 p-5">
+                                <p class="text-xs font-bold uppercase text-purple-400">Stage 2: 3 Coding Problems</p>
+                                <p class="text-3xl font-black text-white mt-2">${a.codingScore} <span class="text-base font-semibold text-slate-400">/ 50 Marks</span></p>
+                                <p class="text-xs text-slate-400 mt-2">Easy: ${a.codingSubmissions[0].score}/10 • Med: ${a.codingSubmissions[1].score}/15 • Hard: ${a.codingSubmissions[2].score}/25</p>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-500/40 bg-emerald-950/20 p-5">
+                                <p class="text-xs font-bold uppercase text-emerald-400">Total Verified Score</p>
+                                <p class="text-3xl font-black text-emerald-300 mt-2">${a.totalScore} <span class="text-base font-semibold text-slate-300">/ 100 Marks</span></p>
+                                <p class="text-xs text-emerald-200 mt-2">Synced with Page 3 Spider Charts</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (a.stage === "mcq") {
+                const questions = getMcqQuestionsForSkill(skill, a.attemptVersion);
+                const qIdx = a.currentMcqIndex;
+                const currentQ = questions[qIdx];
+                const answeredCount = Object.keys(a.mcqAnswers).length;
+
+                let diffBadge = "";
+                if (currentQ.diff === "Easy") {
+                    diffBadge = `<span class="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-3 py-1 text-xs font-extrabold text-emerald-300">Easy Tier (Q1–Q5) • ${currentQ.marks} Marks</span>`;
+                } else if (currentQ.diff === "Medium") {
+                    diffBadge = `<span class="rounded-full bg-cyan-500/20 border border-cyan-500/40 px-3 py-1 text-xs font-extrabold text-cyan-300">Medium Tier (Q6–Q10) • ${currentQ.marks} Marks</span>`;
+                } else {
+                    diffBadge = `<span class="rounded-full bg-rose-500/20 border border-rose-500/40 px-3 py-1 text-xs font-extrabold text-rose-300">Hard Tier (Q11–Q15) • ${currentQ.marks} Marks</span>`;
+                }
+
+                const navPills = questions.map((qItem, idx) => {
+                    const isAnswered = a.mcqAnswers[idx] !== undefined;
+                    const isCurrent = idx === qIdx;
+                    let pillCls = "border-slate-800 bg-slate-950 text-slate-400";
+                    if (isCurrent) {
+                        pillCls = "border-cyan-400 bg-cyan-500 text-slate-950 font-black ring-2 ring-cyan-400/40";
+                    } else if (isAnswered) {
+                        pillCls = "border-emerald-500/50 bg-emerald-500/20 text-emerald-300 font-bold";
+                    }
+                    return `<button type="button" onclick="jumpToMcqQuestion(${idx})" class="h-9 w-9 rounded-xl border text-xs transition-all ${pillCls}">${idx + 1}</button>`;
+                }).join("");
+
+                const optionsHtml = currentQ.options.map((optText, oIdx) => {
+                    const isSelected = a.mcqAnswers[qIdx] === oIdx;
+                    const optCls = isSelected
+                        ? "border-cyan-400 bg-cyan-500/20 text-white shadow-md shadow-cyan-500/10"
+                        : "border-slate-800 bg-slate-950/90 text-slate-200 hover:border-slate-600";
+                    const letter = ["A", "B", "C", "D"][oIdx];
+                    return `
+                        <button type="button" onclick="selectMcqOption(${qIdx}, ${oIdx})" class="w-full text-left rounded-xl border p-4 transition-all flex items-center gap-3.5 ${optCls}">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${isSelected ? 'border-cyan-300 bg-cyan-400 text-slate-950 font-black' : 'border-slate-700 bg-slate-900 text-slate-400 font-bold'} text-xs">${letter}</span>
+                            <span class="text-sm font-medium">${optText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                        </button>
+                    `;
+                }).join("");
+
+                workspace.innerHTML = `
+                    <div class="space-y-6 fade-in">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="rounded-lg bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-0.5 text-[11px] font-bold text-cyan-300">Stage 1 of 2 • 15 Tiered MCQs (50 Marks Total)</span>
+                                    <span class="text-xs text-slate-400">Attempt #${a.attemptVersion + 1}</span>
+                                </div>
+                                <h3 class="text-xl sm:text-2xl font-extrabold text-white mt-1">${skill} — Multiple Choice Competency Exam</h3>
+                                <p class="text-xs text-slate-400">5 Easy (2M each = 10M) • 5 Medium (3M each = 15M) • 5 Hard (5M each = 25M). Complete all 15 to unlock the 3 Coding Problems.</p>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <button type="button" onclick="demoAutoAnswerCurrentSkillMcqs()" class="rounded-xl border border-purple-500/40 bg-purple-500/15 hover:bg-purple-500/25 px-3.5 py-2 text-xs font-bold text-purple-300 transition-colors">
+                                    ⚡ Demo Quick-Fill All 15 MCQs
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-bold text-slate-300">Question Navigator (${answeredCount}/15 Answered)</span>
+                                <span class="text-slate-400">Q1–5 Easy (2M) | Q6–10 Medium (3M) | Q11–15 Hard (5M)</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2">${navPills}</div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-6 space-y-5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Question ${qIdx + 1} of 15</span>
+                                ${diffBadge}
+                            </div>
+
+                            <h4 class="text-base sm:text-lg font-bold text-white leading-relaxed no-select">${currentQ.q.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
+
+                            <div class="space-y-3">${optionsHtml}</div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+                            <div class="flex gap-2">
+                                <button type="button" onclick="jumpToMcqQuestion(${Math.max(0, qIdx - 1)})" ${qIdx === 0 ? "disabled" : ""} class="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 disabled:opacity-40">
+                                    ← Previous
+                                </button>
+                                <button type="button" onclick="jumpToMcqQuestion(${Math.min(14, qIdx + 1)})" ${qIdx === 14 ? "disabled" : ""} class="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 disabled:opacity-40">
+                                    Next Question →
+                                </button>
+                            </div>
+
+                            <button type="button" onclick="submitMcqStageAndUnlockCoding()" class="rounded-xl ${answeredCount === 15 ? 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white shadow-lg shadow-cyan-500/20' : 'border border-slate-700 bg-slate-800 text-slate-400'} px-6 py-3 text-xs sm:text-sm font-extrabold transition-all">
+                                ${answeredCount === 15 ? "Submit 15 MCQs → Enter 3 Coding Problems (50M) ➔" : `Answer All 15 MCQs to Unlock Coding (${answeredCount}/15)`}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (a.stage === "coding") {
+                const challenges = getCodingChallengesForSkill(skill, a.attemptVersion);
+                const cardsHtml = challenges.map((ch, cIdx) => {
+                    const sub = a.codingSubmissions[cIdx];
+                    const currentCode = sub.code || ch.starter;
+
+                    let badgeCls = "bg-emerald-500/20 border-emerald-500/40 text-emerald-300";
+                    if (ch.diff === "Medium") badgeCls = "bg-cyan-500/20 border-cyan-500/40 text-cyan-300";
+                    if (ch.diff === "Hard") badgeCls = "bg-rose-500/20 border-rose-500/40 text-rose-300";
+
+                    return `
+                        <div class="rounded-2xl border border-slate-800 bg-slate-950/90 p-6 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="rounded-full border px-3 py-0.5 text-xs font-extrabold ${badgeCls}">${ch.diff} • ${ch.marks} Marks</span>
+                                    <h4 class="text-base font-extrabold text-white">${ch.title}</h4>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="coding-score-pill-${cIdx}" class="rounded-lg border ${sub.verified ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300' : 'border-slate-700 bg-slate-900 text-slate-400'} px-3 py-1 text-xs font-bold">
+                                        Score: ${sub.score} / ${ch.marks}M
+                                    </span>
+                                    <button type="button" onclick="demoPopulateCodingSolution(${cIdx})" class="rounded-lg border border-purple-500/40 bg-purple-500/15 hover:bg-purple-500/25 px-2.5 py-1 text-[11px] font-bold text-purple-300" title="Simulate typing valid solution for live hackathon demo">
+                                        ⚡ Demo Type Solution
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-slate-300 leading-relaxed no-select">${ch.desc}</p>
+                            <div class="rounded-xl bg-slate-900 border border-slate-800 px-3.5 py-2 text-xs font-mono-code text-cyan-300 no-select">
+                                ${ch.example}
+                            </div>
+
+                            <div class="relative">
+                                <div class="flex items-center justify-between bg-slate-900 border border-b-0 border-slate-700 rounded-t-xl px-4 py-2 text-[11px] text-slate-400">
+                                    <span class="font-mono-code font-semibold text-slate-300">${skill} Proctored Editor</span>
+                                    <span class="text-rose-400 font-bold">🛡️ Copy / Paste / Drop Blocked</span>
+                                </div>
+                                <textarea
+                                    id="coding-editor-${cIdx}"
+                                    rows="6"
+                                    spellcheck="false"
+                                    onpaste="handleProctorClipboardViolation(event)"
+                                    oncopy="handleProctorClipboardViolation(event)"
+                                    oncut="handleProctorClipboardViolation(event)"
+                                    ondrop="handleProctorClipboardViolation(event)"
+                                    oncontextmenu="handleProctorClipboardViolation(event)"
+                                    onkeydown="handleCodingEditorKeydown(event, ${cIdx})"
+                                    oninput="saveCodingDraft(${cIdx}, this.value)"
+                                    class="w-full rounded-b-xl border border-slate-700 bg-[#050811] p-4 font-mono-code text-xs text-emerald-300 focus:border-cyan-400 focus:outline-none leading-relaxed"
+                                >${currentCode}</textarea>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1">
+                                <span id="coding-feedback-${cIdx}" class="text-xs ${sub.verified ? 'text-emerald-400 font-semibold' : 'text-slate-400'}">
+                                    ${sub.verified ? "✓ Test cases verified & marks awarded!" : "Write your solution and click 'Run & Verify Code'"}
+                                </span>
+                                <button type="button" onclick="verifyCodingChallenge(${cIdx})" class="rounded-xl bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-xs font-extrabold text-cyan-300 transition-all">
+                                    ▶ Run & Verify Code (${ch.marks}M)
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                workspace.innerHTML = `
+                    <div class="space-y-6 fade-in">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="rounded-lg bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">✓ Stage 1 MCQs Complete: ${a.mcqScore}/50 Marks</span>
+                                    <span class="rounded-lg bg-purple-500/20 border border-purple-500/40 px-2.5 py-0.5 text-[11px] font-bold text-purple-300">Stage 2 of 2 • 3 Coding Challenges (50 Marks)</span>
+                                    <span id="proctor-violation-pill" class="rounded-lg bg-rose-500/20 border border-rose-500/40 px-2.5 py-0.5 text-[11px] font-bold text-rose-300">🛡️ Paste Attempts Blocked: ${state.proctorViolations}</span>
+                                </div>
+                                <h3 class="text-xl sm:text-2xl font-extrabold text-white mt-1.5">${skill} — Proctored Coding Assessment Arena</h3>
+                                <p class="text-xs text-slate-400">Easy (10 Marks) + Medium (15 Marks) + Hard (25 Marks) = 50 Marks. Copy-paste is strictly blocked across all editors.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-5">${cardsHtml}</div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800">
+                            <div class="text-xs text-slate-300">
+                                Current Combined Score Preview: <strong class="text-cyan-300">MCQ (${a.mcqScore}/50)</strong> + <strong id="live-coding-total" class="text-purple-300">Coding (${a.codingScore}/50)</strong> = <strong id="live-combined-total" class="text-emerald-300 text-sm">${a.mcqScore + a.codingScore}/100</strong>
+                            </div>
+                            <button type="button" onclick="finalizeSkillAssessment()" class="rounded-2xl bg-gradient-to-r from-emerald-500 via-cyan-500 to-purple-600 hover:from-emerald-400 hover:to-purple-500 px-7 py-3.5 text-xs sm:text-sm font-extrabold text-slate-950 shadow-xl shadow-cyan-500/20 transition-all">
+                                Submit Coding Assessment & Finalize ${skill} Score (/100) ➔
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function selectMcqOption(qIdx, optIdx) {
+            const a = state.assessments[state.activeAssessmentSkill];
+            a.mcqAnswers[qIdx] = optIdx;
+            renderPage2SkillTabs();
+            renderActiveSkillAssessment();
+        }
+
+        function jumpToMcqQuestion(qIdx) {
+            const a = state.assessments[state.activeAssessmentSkill];
+            a.currentMcqIndex = qIdx;
+            renderActiveSkillAssessment();
+        }
+
+        function demoAutoAnswerCurrentSkillMcqs() {
+            const skill = state.activeAssessmentSkill;
+            const a = state.assessments[skill];
+            const questions = getMcqQuestionsForSkill(skill, a.attemptVersion);
+            questions.forEach((q, idx) => {
+                a.mcqAnswers[idx] = (idx === 4 || idx === 13) ? ((q.ans + 1) % 4) : q.ans;
+            });
+            a.currentMcqIndex = 14;
+            renderPage2SkillTabs();
+            renderActiveSkillAssessment();
+            showToast("15 MCQs Populated", `All 15 MCQs for ${skill} have been answered. Click 'Submit 15 MCQs → Enter 3 Coding Problems' to proceed!`, "cyan");
+        }
+
+        function submitMcqStageAndUnlockCoding() {
+            const skill = state.activeAssessmentSkill;
+            const a = state.assessments[skill];
+            const questions = getMcqQuestionsForSkill(skill, a.attemptVersion);
+
+            if (Object.keys(a.mcqAnswers).length < 15) {
+                showToast("Complete All 15 MCQs First", "You must answer all 15 MCQs (5 Easy, 5 Medium, 5 Hard) before unlocking the 3 Coding Challenges.", "rose");
+                return;
+            }
+
+            let easy = 0, med = 0, hard = 0;
+            questions.forEach((q, idx) => {
+                if (a.mcqAnswers[idx] === q.ans) {
+                    if (q.diff === "Easy") easy += q.marks;
+                    else if (q.diff === "Medium") med += q.marks;
+                    else hard += q.marks;
+                }
+            });
+
+            a.easyScore = easy;
+            a.medScore = med;
+            a.hardScore = hard;
+            a.mcqScore = easy + med + hard;
+            a.stage = "coding";
+
+            renderPage2SkillTabs();
+            renderActiveSkillAssessment();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        // =====================================================================
+        // 8. ANTI-COPY-PASTE PROCTORING & CODING EVALUATION
+        // =====================================================================
+        function handleProctorClipboardViolation(e) {
+            e.preventDefault();
+            state.proctorViolations += 1;
+            const pill = document.getElementById("proctor-violation-pill");
+            if (pill) {
+                pill.textContent = `🛡️ Paste Attempts Blocked: ${state.proctorViolations}`;
+            }
+            showToast(
+                "🛡️ Anti-Cheat Active: Clipboard Blocked",
+                "Copy, Paste, Cut, and Drag-and-Drop are strictly disabled in the Coding Assessment Arena! Please type your code directly.",
+                "rose"
+            );
+            return false;
+        }
+
+        function handleCodingEditorKeydown(e, cIdx) {
+            if ((e.ctrlKey || e.metaKey) && ["v", "c", "x"].includes(e.key.toLowerCase())) {
+                return handleProctorClipboardViolation(e);
+            }
+            if (e.shiftKey && e.key === "Insert") {
+                return handleProctorClipboardViolation(e);
+            }
+            if (e.key === "Tab") {
+                e.preventDefault();
+                const el = e.target;
+                const start = el.selectionStart;
+                const end = el.selectionEnd;
+                el.value = el.value.substring(0, start) + "    " + el.value.substring(end);
+                el.selectionStart = el.selectionEnd = start + 4;
+                saveCodingDraft(cIdx, el.value);
+            }
+        }
+
+        function saveCodingDraft(cIdx, val) {
+            const a = state.assessments[state.activeAssessmentSkill];
+            a.codingSubmissions[cIdx].code = val;
+        }
+
+        function verifyCodingChallenge(cIdx) {
+            const skill = state.activeAssessmentSkill;
+            const a = state.assessments[skill];
+            const challenges = getCodingChallengesForSkill(skill, a.attemptVersion);
+            const ch = challenges[cIdx];
+            const editor = document.getElementById(`coding-editor-${cIdx}`);
+            const code = (editor ? editor.value : a.codingSubmissions[cIdx].code).trim();
+            a.codingSubmissions[cIdx].code = code;
+
+            const lower = code.toLowerCase();
+            let matchedKeywords = 0;
+            ch.keywords.forEach(kw => {
+                if (lower.includes(kw.toLowerCase())) matchedKeywords += 1;
+            });
+
+            const codeLengthDelta = code.length - ch.starter.trim().length;
+            let awarded = 0;
+            if (codeLengthDelta > 15 && matchedKeywords >= Math.ceil(ch.keywords.length * 0.75)) {
+                awarded = ch.marks;
+            } else if (codeLengthDelta > 8 && matchedKeywords >= 1) {
+                awarded = Math.round(ch.marks * 0.6);
+            } else {
+                awarded = 0;
+            }
+
+            a.codingSubmissions[cIdx].score = awarded;
+            a.codingSubmissions[cIdx].verified = awarded > 0;
+            a.codingScore = a.codingSubmissions[0].score + a.codingSubmissions[1].score + a.codingSubmissions[2].score;
+
+            const scorePill = document.getElementById(`coding-score-pill-${cIdx}`);
+            const feedback = document.getElementById(`coding-feedback-${cIdx}`);
+            if (scorePill) {
+                scorePill.textContent = `Score: ${awarded} / ${ch.marks}M`;
+                scorePill.className = `rounded-lg border px-3 py-1 text-xs font-bold ${awarded > 0 ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300' : 'border-rose-500/40 bg-rose-500/15 text-rose-300'}`;
+            }
+            if (feedback) {
+                feedback.textContent = awarded === ch.marks
+                    ? `✓ All test cases passed! Awarded ${awarded}/${ch.marks} Marks.`
+                    : awarded > 0
+                        ? `✓ Partial test cases passed (${awarded}/${ch.marks} Marks). Refine logic for full marks.`
+                        : `✕ Solution incomplete. Include required logic structure (${ch.keywords.join(", ")}).`;
+                feedback.className = `text-xs font-semibold ${awarded > 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            }
+
+            const liveCoding = document.getElementById("live-coding-total");
+            const liveCombined = document.getElementById("live-combined-total");
+            if (liveCoding) liveCoding.textContent = `Coding (${a.codingScore}/50)`;
+            if (liveCombined) liveCombined.textContent = `${a.mcqScore + a.codingScore}/100`;
+        }
+
+        function demoPopulateCodingSolution(cIdx) {
+            const skill = state.activeAssessmentSkill;
+            const a = state.assessments[skill];
+            const challenges = getCodingChallengesForSkill(skill, a.attemptVersion);
+            const ch = challenges[cIdx];
+            const editor = document.getElementById(`coding-editor-${cIdx}`);
+            if (editor) {
+                editor.value = ch.sampleSolution;
+                verifyCodingChallenge(cIdx);
+            }
+        }
+
+        function finalizeSkillAssessment() {
+            const skill = state.activeAssessmentSkill;
+            const a = state.assessments[skill];
+            [0, 1, 2].forEach(idx => verifyCodingChallenge(idx));
+
+            a.codingScore = a.codingSubmissions[0].score + a.codingSubmissions[1].score + a.codingSubmissions[2].score;
+            a.totalScore = a.mcqScore + a.codingScore;
+            a.completed = true;
+            a.stage = "completed";
+
+            renderTopbarAndDrawer();
+            renderPage2SkillTabs();
+            renderActiveSkillAssessment();
+
+            if (areAllSkillsCompleted()) {
+                showToast(
+                    "All Skill Assessments Complete!",
+                    "Every selected skill has been evaluated out of 100 marks. Redirecting you to Page 3: Dual Spider Charts & Career Gap Analysis...",
+                    "emerald"
+                );
+                setTimeout(() => navigateToPage(3), 1100);
+            } else {
+                const nextPending = state.selectedSkills.find(s => !state.assessments[s].completed);
+                if (nextPending) {
+                    showToast(
+                        `${skill} Scored ${a.totalScore}/100!`,
+                        `Great job! Next up: complete the assessment for ${nextPending}.`,
+                        "cyan"
+                    );
+                }
+            }
+        }
+
+        function retakeSkillAssessment(skill) {
+            const currentAttempt = state.assessments[skill] ? state.assessments[skill].attemptVersion : 0;
+            initSkillAssessmentState(skill, currentAttempt + 1);
+            state.activeAssessmentSkill = skill;
+            navigateToPage(2);
+            showToast(
+                `Retake Loaded — Set #${currentAttempt + 2}`,
+                `Generated a brand-new set of 15 MCQs and 3 Coding Challenges for ${skill}!`,
+                "cyan"
+            );
+        }
+
+        function demoAutoCompleteAllAssessments() {
+            ensureAllSelectedSkillsInitialized();
+            const presetScores = [
+                { easy: 10, med: 12, hard: 20, c0: 10, c1: 15, c2: 20 },
+                { easy: 8,  med: 12, hard: 15, c0: 10, c1: 15, c2: 15 },
+                { easy: 10, med: 15, hard: 20, c0: 10, c1: 15, c2: 22 },
+                { easy: 8,  med: 9,  hard: 10, c0: 10, c1: 10, c2: 10 }
+            ];
+
+            state.selectedSkills.forEach((skill, idx) => {
+                const a = state.assessments[skill];
+                if (!a.completed) {
+                    const p = presetScores[idx % presetScores.length];
+                    a.easyScore = p.easy;
+                    a.medScore = p.med;
+                    a.hardScore = p.hard;
+                    a.mcqScore = p.easy + p.med + p.hard;
+                    a.codingSubmissions[0] = { code: "// Verified", score: p.c0, verified: true };
+                    a.codingSubmissions[1] = { code: "// Verified", score: p.c1, verified: true };
+                    a.codingSubmissions[2] = { code: "// Verified", score: p.c2, verified: true };
+                    a.codingScore = p.c0 + p.c1 + p.c2;
+                    a.totalScore = a.mcqScore + a.codingScore;
+                    a.completed = true;
+                    a.stage = "completed";
+                }
+            });
+
+            navigateToPage(3);
+        }
+
+        // =====================================================================
+        // 9. PAGE 3: SVG DUAL SPIDER CHARTS & ROADMAP
+        // =====================================================================
+        function createSvgSpiderChart(axesLabels, datasets, size = 340) {
+            const labels = [...axesLabels];
+            while (labels.length < 3) {
+                labels.push(labels.length === 1 ? "Problem Solving" : "Code Quality");
+            }
+            const N = labels.length;
+            const cx = size / 2;
+            const cy = size / 2;
+            const radius = size * 0.33;
+
+            const angleFor = (i) => (Math.PI * 2 * i) / N - Math.PI / 2;
+            const pointFor = (i, valPercent) => {
+                const r = (Math.max(0, Math.min(100, valPercent)) / 100) * radius;
+                const ang = angleFor(i);
+                return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)];
+            };
+
+            const rings = [20, 40, 60, 80, 100].map(pct => {
+                const pts = labels.map((_, i) => pointFor(i, pct).join(",")).join(" ");
+                return `<polygon points="${pts}" fill="none" stroke="#1e293b" stroke-width="1" />`;
+            }).join("");
+
+            const spokesAndLabels = labels.map((lbl, i) => {
+                const [xEnd, yEnd] = pointFor(i, 100);
+                const [xLbl, yLbl] = pointFor(i, 122);
+                const anchor = Math.abs(xLbl - cx) < 10 ? "middle" : xLbl > cx ? "start" : "end";
+                return `
+                    <line x1="${cx}" y1="${cy}" x2="${xEnd}" y2="${yEnd}" stroke="#334155" stroke-width="1" stroke-dasharray="3,3" />
+                    <text x="${xLbl}" y="${yLbl}" text-anchor="${anchor}" dominant-baseline="middle" fill="#e2e8f0" font-size="11" font-weight="700">${lbl}</text>
+                `;
+            }).join("");
+
+            const polygonsHtml = datasets.map(ds => {
+                const values = [...ds.values];
+                while (values.length < N) {
+                    values.push(values[0] || 75);
+                }
+                const pts = values.map((v, i) => pointFor(i, v).join(",")).join(" ");
+                const dots = values.map((v, i) => {
+                    const [px, py] = pointFor(i, v);
+                    return `<circle cx="${px}" cy="${py}" r="4" fill="${ds.stroke}" stroke="#060913" stroke-width="1.5"><title>${labels[i]}: ${Math.round(v)}%</title></circle>`;
+                }).join("");
+                return `
+                    <polygon class="radar-polygon" points="${pts}" fill="${ds.fill}" stroke="${ds.stroke}" stroke-width="2.2" />
+                    ${dots}
+                `;
+            }).join("");
+
+            return `
+                <svg viewBox="0 0 ${size} ${size}" class="w-full max-w-[360px] h-auto overflow-visible">
+                    ${rings}
+                    ${spokesAndLabels}
+                    ${polygonsHtml}
+                </svg>
+            `;
+        }
+
+        function getInferredTier(score) {
+            if (score >= 85) return { label: "Expert", cls: "bg-emerald-500/20 border-emerald-500/40 text-emerald-300" };
+            if (score >= 70) return { label: "Advanced", cls: "bg-cyan-500/20 border-cyan-500/40 text-cyan-300" };
+            if (score >= 55) return { label: "Practitioner", cls: "bg-purple-500/20 border-purple-500/40 text-purple-300" };
+            return { label: "Needs Remedial", cls: "bg-rose-500/20 border-rose-500/40 text-rose-300" };
+        }
+
+        function renderPage3AnalyticsAndRoadmap() {
+            document.getElementById("p3-target-career-label").textContent = state.targetCareer;
+            document.getElementById("p3-chart2-career").textContent = state.targetCareer;
+
+            const skillNames = state.selectedSkills;
+            const totalScores = skillNames.map(s => state.assessments[s]?.totalScore || 0);
+            const codingPcts = skillNames.map(s => (state.assessments[s]?.codingScore || 0) * 2);
+            const mcqPcts = skillNames.map(s => (state.assessments[s]?.mcqScore || 0) * 2);
+
+            const avgScore = totalScores.length ? Math.round(totalScores.reduce((a, b) => a + b, 0) / totalScores.length) : 0;
+            document.getElementById("p3-avg-score-badge").textContent = `Avg Depth: ${avgScore}/100`;
+
+            document.getElementById("spider-chart-1-container").innerHTML = createSvgSpiderChart(
+                skillNames,
+                [
+                    { stroke: "#10b981", fill: "rgba(16, 185, 129, 0.10)", values: mcqPcts },
+                    { stroke: "#a855f7", fill: "rgba(168, 85, 247, 0.14)", values: codingPcts },
+                    { stroke: "#22d3ee", fill: "rgba(34, 211, 238, 0.25)", values: totalScores }
+                ]
+            );
+
+            const careerSpec = POPULAR_CAREERS[state.targetCareer] || {
+                requiredSkills: ["Python", "SQL", "JavaScript", "Docker", "AWS", "Git"],
+                benchmark: 88
+            };
+            const combinedAxes = Array.from(new Set([...careerSpec.requiredSkills, ...state.selectedSkills])).slice(0, 8);
+            const userReadinessValues = combinedAxes.map(sk => {
+                if (state.assessments[sk] && state.assessments[sk].completed) {
+                    return state.assessments[sk].totalScore;
+                }
+                return 8;
+            });
+            const benchmarkValues = combinedAxes.map(sk => careerSpec.requiredSkills.includes(sk) ? careerSpec.benchmark : 75);
+
+            const reqSkills = careerSpec.requiredSkills;
+            const earnedReqSum = reqSkills.reduce((acc, sk) => acc + (state.assessments[sk]?.completed ? state.assessments[sk].totalScore : 0), 0);
+            const matchPct = Math.min(100, Math.round(earnedReqSum / (reqSkills.length * careerSpec.benchmark) * 100));
+            document.getElementById("p3-readiness-badge").textContent = `Role Readiness: ${matchPct}%`;
+
+            document.getElementById("spider-chart-2-container").innerHTML = createSvgSpiderChart(
+                combinedAxes,
+                [
+                    { stroke: "#f43f5e", fill: "rgba(244, 63, 94, 0.14)", values: benchmarkValues },
+                    { stroke: "#22d3ee", fill: "rgba(34, 211, 238, 0.28)", values: userReadinessValues }
+                ]
+            );
+
+            const missingSkills = reqSkills.filter(sk => !state.selectedSkills.includes(sk));
+            const weakSkills = state.selectedSkills.filter(sk => (state.assessments[sk]?.totalScore || 0) < 65);
+
+            document.getElementById("p3-gap-summary-box").innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <span class="font-bold text-rose-400">Missing Target Career Skills (${missingSkills.length}):</span>
+                        <span class="text-slate-200 ml-1">${missingSkills.length ? missingSkills.join(", ") : "None! You cover all core skills."}</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-cyan-300">Weak Assessed Skills (&lt;65/100):</span>
+                        <span class="text-slate-200 ml-1">${weakSkills.length ? weakSkills.join(", ") : "None — Strong Depth!"}</span>
+                    </div>
+                </div>
+            `;
+
+            const tbody = document.getElementById("p3-telemetry-table");
+            tbody.innerHTML = state.selectedSkills.map(skill => {
+                const a = state.assessments[skill];
+                const tier = getInferredTier(a.totalScore);
+                return `
+                    <tr class="hover:bg-slate-900/60 transition-colors">
+                        <td class="py-3.5 px-4 font-extrabold text-white">${skill} <span class="text-[10px] text-slate-400 font-normal">(v${a.attemptVersion + 1})</span></td>
+                        <td class="py-3.5 px-4 text-slate-300">Easy: ${a.easyScore}/10 • Med: ${a.medScore}/15 • Hard: ${a.hardScore}/25</td>
+                        <td class="py-3.5 px-4 font-bold text-cyan-300">${a.mcqScore} / 50</td>
+                        <td class="py-3.5 px-4 font-bold text-purple-300">${a.codingScore} / 50</td>
+                        <td class="py-3.5 px-4 font-black text-emerald-300 text-sm">${a.totalScore} / 100</td>
+                        <td class="py-3.5 px-4"><span class="rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${tier.cls}">${tier.label}</span></td>
+                        <td class="py-3.5 px-4 text-right">
+                            <button onclick="retakeSkillAssessment('${skill.replace(/'/g, "\\'")}')" class="rounded-lg border border-purple-500/40 bg-purple-500/15 hover:bg-purple-500/30 px-3 py-1.5 text-xs font-bold text-purple-200 transition-colors">
+                                🔄 Retake Exam
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+
+            renderAgent2Roadmap(missingSkills, weakSkills);
+
+            const chatBox = document.getElementById("p3-chat-messages");
+            if (!chatBox.innerHTML.trim()) {
+                appendMentorChatMessage(
+                    `Hello <strong>${state.userName}</strong>! I have synthesized your 100-mark assessment telemetry across <strong>${state.selectedSkills.join(", ")}</strong> (Average Depth: <strong>${avgScore}/100</strong>). Your current alignment with <strong>${state.targetCareer}</strong> is <strong>${matchPct}%</strong>. ${missingSkills.length ? `Focus next on bridging your missing role skills: <strong>${missingSkills.join(", ")}</strong>.` : `Your skill coverage is outstanding!`}`
+                );
+            }
+        }
+
+        function renderAgent2Roadmap(missingSkills, weakSkills) {
+            const modules = [];
+            weakSkills.forEach(sk => {
+                const sc = state.assessments[sk]?.totalScore || 0;
+                modules.push({
+                    id: `remedial_${sk}`,
+                    type: "Remedial Depth Booster",
+                    badgeCls: "border-rose-500/40 bg-rose-500/15 text-rose-300",
+                    title: `Remedial Mastery: ${sk} Intensive Practice (Scored ${sc}/100)`,
+                    desc: `Auto-injected by Agent 2 & 3 based on exam performance. Covers advanced ${sk} patterns and hands-on coding drills.`
+                });
+            });
+
+            missingSkills.forEach((sk, i) => {
+                modules.push({
+                    id: `missing_${sk}`,
+                    type: `Priority Gap #${i + 1}`,
+                    badgeCls: "border-cyan-500/40 bg-cyan-500/15 text-cyan-300",
+                    title: `Core Target Competency: ${sk} for ${state.targetCareer}`,
+                    desc: `Interactive architecture lab, guided documentation sprint, and capstone integration project in ${sk}.`
+                });
+            });
+
+            modules.push({
+                id: `capstone_${state.targetCareer}`,
+                type: "Capstone Project",
+                badgeCls: "border-purple-500/40 bg-purple-500/15 text-purple-300",
+                title: `Production ${state.targetCareer} Portfolio System`,
+                desc: `Build and deploy an end-to-end project combining ${state.selectedSkills.slice(0, 3).join(", ")} and target benchmarks.`
+            });
+
+            const listEl = document.getElementById("p3-roadmap-list");
+            const doneCount = modules.filter(m => state.roadmapChecked[m.id]).length;
+            const pct = Math.round((doneCount / modules.length) * 100);
+            document.getElementById("p3-roadmap-progress").textContent = `${pct}% Completed`;
+
+            listEl.innerHTML = modules.map(m => {
+                const checked = !!state.roadmapChecked[m.id];
+                return `
+                    <label class="flex items-start gap-3.5 rounded-xl border ${checked ? 'border-emerald-500/40 bg-emerald-950/15 opacity-75' : 'border-slate-800 bg-slate-950/90'} p-4 cursor-pointer hover:border-cyan-500/40 transition-all">
+                        <input type="checkbox" ${checked ? "checked" : ""} onchange="toggleRoadmapItem('${m.id}', '${m.title.replace(/'/g, "\\'")}')" class="mt-1 h-4 w-4 rounded accent-cyan-400">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-sm font-extrabold ${checked ? 'line-through text-slate-400' : 'text-white'}">${m.title}</span>
+                                <span class="rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${m.badgeCls}">${m.type}</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">${m.desc}</p>
+                        </div>
+                    </label>
+                `;
+            }).join("");
+        }
+
+        function toggleRoadmapItem(id, title) {
+            state.roadmapChecked[id] = !state.roadmapChecked[id];
+            renderPage3AnalyticsAndRoadmap();
+            if (state.roadmapChecked[id]) {
+                appendMentorChatMessage(`✅ <strong>Milestone Completed:</strong> "${title}"! Your career readiness trajectory has been updated.`);
+            }
+        }
+
+        function appendMentorChatMessage(html, isUser = false) {
+            const box = document.getElementById("p3-chat-messages");
+            const div = document.createElement("div");
+            div.className = isUser ? "flex justify-end fade-in" : "flex justify-start fade-in";
+            div.innerHTML = isUser
+                ? `<div class="rounded-2xl rounded-tr-none bg-cyan-500 text-slate-950 font-semibold px-4 py-2.5 max-w-[85%]">${html}</div>`
+                : `<div class="rounded-2xl rounded-tl-none border border-slate-800 bg-slate-950 text-slate-200 px-4 py-3 max-w-[90%]">${html}</div>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendQuickMentorPrompt(text) {
+            document.getElementById("p3-chat-input").value = text;
+            handleMentorChatSubmit(new Event("submit"));
+        }
+
+        function handleMentorChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById("p3-chat-input");
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = "";
+            appendMentorChatMessage(msg, true);
+
+            const careerSpec = POPULAR_CAREERS[state.targetCareer] || { requiredSkills: ["Python", "SQL", "Docker"] };
+            const missing = careerSpec.requiredSkills.filter(s => !state.selectedSkills.includes(s));
+            const sortedByScore = [...state.selectedSkills].sort((a, b) => (state.assessments[a]?.totalScore || 0) - (state.assessments[b]?.totalScore || 0));
+            const lowestSkill = sortedByScore[0];
+            const lowestScore = state.assessments[lowestSkill]?.totalScore || 0;
+
+            setTimeout(() => {
+                const lower = msg.toLowerCase();
+                if (lower.includes("spider") || lower.includes("gap")) {
+                    appendMentorChatMessage(
+                        `📊 <strong>Spider Chart Telemetry Analysis:</strong> On Spider Chart 1, your lowest assessed skill is <strong>${lowestSkill} (${lowestScore}/100)</strong>. On Spider Chart 2, your biggest missing gaps for <strong>${state.targetCareer}</strong> are <strong>${missing.length ? missing.join(", ") : "already covered"}</strong>.`
+                    );
+                } else if (lower.includes("coding") || lower.includes("improve") || lower.includes("retake")) {
+                    appendMentorChatMessage(
+                        `💻 <strong>Boosting Your Coding Score:</strong> Each skill has 3 proctored coding problems worth 50 marks (10M Easy + 15M Medium + 25M Hard). Click <strong>🔄 Retake Exam</strong> in the table above to get a fresh question set for <strong>${lowestSkill}</strong>!`
+                    );
+                } else {
+                    appendMentorChatMessage(
+                        `🎯 <strong>Agent 3 Recommendation:</strong> Start with the top item in your Adaptive Roadmap (${missing[0] || lowestSkill}). Once you feel confident, add ${missing[0] || "a new skill"} to your Profile and take its 100-mark proctored assessment!`
+                    );
+                }
+            }, 350);
+        }
+
+        // =====================================================================
+        // 10. TOAST HELPER
+        // =====================================================================
+        let toastTimer = null;
+        function showToast(title, message, tone = "rose") {
+            const toast = document.getElementById("global-toast");
+            const tTitle = document.getElementById("toast-title");
+            const tMsg = document.getElementById("toast-message");
+            const tIcon = document.getElementById("toast-icon");
+
+            tTitle.textContent = title;
+            tMsg.textContent = message;
+
+            if (tone === "emerald") {
+                toast.className = "fixed top-5 right-5 z-[100] max-w-md rounded-2xl border border-emerald-500/60 bg-slate-950/95 px-5 py-4 shadow-2xl shadow-emerald-500/20 backdrop-blur-xl fade-in";
+                tTitle.className = "text-xs font-bold uppercase tracking-wider text-emerald-400";
+                tIcon.className = "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold";
+                tIcon.textContent = "✓";
+            } else if (tone === "cyan") {
+                toast.className = "fixed top-5 right-5 z-[100] max-w-md rounded-2xl border border-cyan-500/60 bg-slate-950/95 px-5 py-4 shadow-2xl shadow-cyan-500/20 backdrop-blur-xl fade-in";
+                tTitle.className = "text-xs font-bold uppercase tracking-wider text-cyan-400";
+                tIcon.className = "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold";
+                tIcon.textContent = "⚡";
+            } else {
+                toast.className = "fixed top-5 right-5 z-[100] max-w-md rounded-2xl border border-rose-500/60 bg-slate-950/95 px-5 py-4 shadow-2xl shadow-rose-500/20 backdrop-blur-xl fade-in";
+                tTitle.className = "text-xs font-bold uppercase tracking-wider text-rose-400";
+                tIcon.className = "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold";
+                tIcon.textContent = "🛡️";
+            }
+
+            toast.classList.remove("hidden");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(hideToast, 4200);
+        }
+
+        function hideToast() {
+            document.getElementById("global-toast").classList.add("hidden");
+        }
+
+        // =====================================================================
+        // 11. BOOTSTRAP ON WINDOW LOAD
+        // =====================================================================
+        window.onload = function () {
+            ensureAllSelectedSkillsInitialized();
+            renderPage1SkillsUI();
+            renderPage1CareerOvals();
+            syncProfileIdentityUI();
+        };
+    </script>
+</body>
+</html>
